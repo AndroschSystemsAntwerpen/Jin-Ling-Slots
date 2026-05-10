@@ -1,2467 +1,1066 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DocAndroschCoin (DAC) - Jin-Ling Slots</title>
-    <meta name="theme-color" content="#0a0a12">
-    <meta name="description" content="Slot-Spiel mit DocAndroschCoin auf Solana">
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Solana Web3.js CDN (für Wallet-Interaktionen) -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    
-    <style>
-        /* ====================== CSS VARIABLES ====================== */
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff00ff;
-            --neon-yellow: #fff200;
-            --neon-green: #00ff88;
-            --dark-bg: #0a0a12;
-            --panel-bg: #1a1a2e;
-            --gold: #ffd700;
-            --danger: #ff4444;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MING'S FACTORY — Jin-Ling Interplanetary Slots</title>
+  <meta name="theme-color" content="#050508">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
-        /* ====================== GLOBAL STYLES ====================== */
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0;
-        }
-        
-        body {
-            background: var(--dark-bg);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            color: white;
-            overflow: hidden;
-            -webkit-user-select: none;
-            user-select: none;
-            height: 100vh;
-            width: 100vw;
-        }
+    :root {
+      --neon-gold:   #ffd700;
+      --neon-red:    #ff2244;
+      --neon-cyan:   #00f3ff;
+      --neon-orange: #ff6600;
+      --neon-green:  #00ff88;
+      --neon-purple: #cc44ff;
+      --factory-dark:#050508;
+      --panel-bg:    #0d0d18;
+      --steel:       #1a1a2e;
+    }
 
-        /* ====================== APP CONTAINER ====================== */
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(180deg, var(--panel-bg) 0%, var(--dark-bg) 100%);
-        }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
-        /* ====================== HEADER ====================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(10, 10, 18, 0.95);
-            backdrop-filter: blur(10px);
-        }
+    html, body {
+      height: 100%; width: 100%;
+      overflow: hidden;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
+      background: var(--factory-dark);
+      color: #ccc;
+      user-select: none;
+    }
 
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    /* ═══════════════ BACKGROUND ═══════════════ */
+    #bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      background: url('assets/IMG_0105.jpg') center center / cover no-repeat;
+      filter: brightness(0.22) saturate(1.4) hue-rotate(180deg);
+    }
+    #bg-overlay {
+      position: fixed; inset: 0; z-index: 1;
+      background:
+        radial-gradient(ellipse 100% 50% at 50% 100%, rgba(255,34,68,0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 60% at 50% 0%,   rgba(0,10,30,0.9)    0%, transparent 80%),
+        linear-gradient(180deg, rgba(5,5,8,0.75) 0%, rgba(5,5,8,0.5) 50%, rgba(5,5,8,0.85) 100%);
+    }
 
-        .logo-icon {
-            font-size: 1.8rem;
-        }
+    /* Pipes overlay */
+    .pipe-h {
+      position: fixed; height: 12px; z-index: 2; pointer-events: none;
+      background: linear-gradient(180deg, #2a2a4a 0%, #111128 60%, #1a1a35 100%);
+      border-bottom: 2px solid #333355; border-top: 1px solid #55556a;
+    }
+    .pipe-v {
+      position: fixed; width: 10px; z-index: 2; pointer-events: none;
+      background: linear-gradient(90deg, #2a2a4a 0%, #111128 60%, #1a1a35 100%);
+      border-right: 1px solid #333355;
+    }
 
-        .logo-text {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--neon-cyan);
-            letter-spacing: 1px;
-        }
+    /* Steam */
+    .steam-vent { position: fixed; bottom: 0; z-index: 2; pointer-events: none; width: 20px; }
+    .sp {
+      position: absolute; bottom: 0; width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(200,200,230,0.25);
+      animation: steamUp 3s ease-out infinite;
+      opacity: 0;
+    }
+    @keyframes steamUp {
+      0%   { transform: translateY(0) scale(1);   opacity: 0.4; }
+      60%  { transform: translateY(-60px) scale(2); opacity: 0.15; }
+      100% { transform: translateY(-110px) scale(3.5); opacity: 0; }
+    }
 
-        .wallet-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
+    /* Sparks container */
+    #sparks { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+    .spark {
+      position: absolute; width: 3px; height: 3px; border-radius: 50%;
+      background: var(--neon-orange);
+      box-shadow: 0 0 5px var(--neon-orange);
+      animation: sparkFly 0.9s ease-out forwards;
+    }
+    @keyframes sparkFly {
+      0%   { transform: translate(0,0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--sx), var(--sy)) scale(0); opacity: 0; }
+    }
 
-        .balance-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-        }
+    /* ═══════════════ GUARD WATCHERS ═══════════════ */
+    .guard {
+      position: fixed; z-index: 6;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      transition: filter 0.25s;
+    }
+    .guard-img {
+      width: 52px; height: 62px;
+      background: url('assets/IMG_0105.jpg') center 10% / cover no-repeat;
+      border-radius: 6px;
+      border: 1px solid rgba(255,34,68,0.4);
+      box-shadow: 0 0 10px rgba(255,34,68,0.3);
+      filter: brightness(0.7) saturate(0.6);
+      animation: guardBreathe 3.5s ease-in-out infinite;
+    }
+    .guard-eye {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--neon-red);
+      box-shadow: 0 0 8px var(--neon-red), 0 0 18px var(--neon-red);
+      animation: eyePulse 2.2s infinite;
+    }
+    .guard-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 7px; color: rgba(255,34,68,0.7);
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    @keyframes guardBreathe { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    @keyframes eyePulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--neon-red)} 50%{opacity:0.4;box-shadow:0 0 20px var(--neon-red),0 0 40px rgba(255,34,68,0.4)} }
 
-        .balance-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 10px rgba(255, 242, 0, 0.3);
-        }
+    #g-tl { top: 56px; left: 4px; }
+    #g-tr { top: 56px; right: 4px; }
+    #g-bl { bottom: 130px; left: 4px; }
+    #g-br { bottom: 130px; right: 4px; }
 
-        .wallet-address {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: monospace;
-        }
+    /* ═══════════════ APP SHELL ═══════════════ */
+    #app {
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center;
+      height: 100%; width: 100%;
+    }
 
-        .connect-btn {
-            background: rgba(0, 243, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
+    /* HEADER */
+    #header {
+      width: 100%;
+      background: rgba(5,5,8,0.96);
+      border-bottom: 1px solid rgba(255,34,68,0.4);
+      padding: 8px 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 25px rgba(255,34,68,0.25);
+    }
+    .hdr-left { display: flex; flex-direction: column; }
+    .hdr-sub  { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: rgba(255,34,68,0.7); letter-spacing: 3px; }
+    .hdr-main { font-size: 1rem; font-weight: 900; letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--neon-gold), #ff8c00);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-shadow: none; line-height: 1.2; }
+    .hdr-sub2 { font-family: 'Share Tech Mono', monospace; font-size: 7px; color: rgba(0,243,255,0.5); letter-spacing: 2px; }
+    .hdr-right { text-align: right; }
+    .bal-lbl { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: rgba(255,215,0,0.5); letter-spacing: 1px; text-transform: uppercase; }
+    .bal-val { font-size: 1.5rem; font-weight: 900; color: var(--neon-gold); text-shadow: 0 0 14px rgba(255,215,0,0.5); }
 
-        .connect-btn:hover {
-            background: rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
+    /* STATUS TICKER */
+    #ticker {
+      width: 100%;
+      background: rgba(255,34,68,0.07);
+      border-bottom: 1px solid rgba(255,34,68,0.2);
+      padding: 4px 0; overflow: hidden;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tick-dot { flex-shrink: 0; margin-left: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); animation: blink 0.9s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+    #tick-text { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: rgba(255,80,80,0.85); letter-spacing: 1px; white-space: nowrap; animation: scrollTick 18s linear infinite; }
+    @keyframes scrollTick { from{transform:translateX(100vw)} to{transform:translateX(-200%)} }
 
-        .connect-btn.connected {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-        }
+    /* GAME AREA */
+    #game { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 10px; gap: 8px; overflow: hidden; }
 
-        /* ====================== SLOT MACHINE ====================== */
-        .game-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            gap: 15px;
-        }
+    /* MACHINE FRAME */
+    #machine {
+      width: 100%; max-width: 430px;
+      background: linear-gradient(180deg, rgba(13,13,24,0.97) 0%, rgba(6,6,16,0.98) 100%);
+      border: 2px solid #1e1e40;
+      border-radius: 14px; padding: 10px;
+      box-shadow: 0 0 0 1px rgba(255,34,68,0.15), 0 0 40px rgba(0,0,0,0.7), inset 0 0 20px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .bolt { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle, #555 0%, #222 100%); border: 1px solid #333; }
+    .b-tl{top:5px;left:5px} .b-tr{top:5px;right:5px} .b-bl{bottom:5px;left:5px} .b-br{bottom:5px;right:5px}
 
-        .reels-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            background: #000;
-            padding: 8px;
-            border-radius: 12px;
-            border: 2px solid #333;
-            height: 280px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-        }
+    /* Title plate */
+    .mach-title {
+      text-align: center; padding: 4px 0 6px;
+      border-bottom: 1px solid rgba(255,34,68,0.2); margin-bottom: 6px;
+    }
+    .mach-title-main { font-size: 0.65rem; font-weight: 900; letter-spacing: 5px; color: var(--neon-gold); text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+    .mach-title-sub  { font-family: 'Share Tech Mono', monospace; font-size: 7px; color: rgba(255,34,68,0.6); letter-spacing: 2px; }
 
-        .reel {
-            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a12 50%, #1a1a2e 100%);
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+    /* ═══════════════ REELS ═══════════════ */
+    #reels-wrap {
+      position: relative;
+      background: #000;
+      border: 2px solid #0a0a1e;
+      border-radius: 8px; overflow: hidden;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
+    }
+    #reels-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 2px; padding: 2px;
+      height: 246px;
+    }
+    .reel {
+      background: linear-gradient(180deg, #08080f 0%, #040408 50%, #08080f 100%);
+      border-radius: 4px; overflow: hidden; position: relative;
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    .reel-strip {
+      position: absolute; width: 100%; top: 0;
+      display: flex; flex-direction: column;
+      will-change: transform;
+    }
 
-        .symbol-strip {
-            position: absolute;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
+    /* Symbol cell — image-based */
+    .sym-cell {
+      height: 80px; flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+    .sym-img {
+      width: 100%; height: 72px;
+      object-fit: cover; object-position: center top;
+      display: block;
+      transition: filter 0.2s;
+      filter: brightness(0.85) saturate(0.9);
+    }
+    .sym-label {
+      position: absolute; bottom: 1px; left: 0; right: 0;
+      text-align: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 6px; letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.45);
+      background: rgba(0,0,0,0.5);
+      padding: 1px 0;
+    }
 
-        .symbol {
-            height: 86px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-        }
+    /* Win state */
+    .sym-cell.win-glow { background: rgba(255,215,0,0.12); }
+    .sym-cell.win-glow .sym-img { filter: brightness(1.2) saturate(1.4); }
+    .sym-cell.win-glow::after {
+      content: ''; position: absolute; inset: 0;
+      box-shadow: inset 0 0 12px rgba(255,215,0,0.5);
+      border-radius: 3px; pointer-events: none;
+      animation: cellGlow 0.5s infinite alternate;
+    }
+    @keyframes cellGlow {
+      from { box-shadow: inset 0 0 8px rgba(255,215,0,0.4); }
+      to   { box-shadow: inset 0 0 20px rgba(255,215,0,0.7); }
+    }
+    .sym-cell.wild-glow { background: rgba(0,243,255,0.1); }
+    .sym-cell.wild-glow .sym-img { filter: brightness(1.3) saturate(1.2); }
+    .sym-cell.wild-glow::after {
+      content: ''; position: absolute; inset: 0;
+      box-shadow: inset 0 0 12px rgba(0,243,255,0.5);
+      border-radius: 3px; pointer-events: none;
+    }
+    .sym-cell.scat-glow { background: rgba(255,100,0,0.1); }
+    .sym-cell.scat-glow::after {
+      content: ''; position: absolute; inset: 0;
+      box-shadow: inset 0 0 14px rgba(255,100,0,0.5);
+      border-radius: 3px; pointer-events: none;
+    }
 
-        .symbol.expanding {
-            animation: expandGlow 0.6s infinite alternate;
-            background: rgba(255, 242, 0, 0.15);
-        }
+    /* Row scanlines */
+    .scanline { position: absolute; left: 0; right: 0; height: 80px; pointer-events: none; z-index: 5; }
+    .sl-top { top: 2px; }
+    .sl-mid { top: 84px; box-shadow: inset 0 0 0 1px rgba(255,215,0,0.08); }
+    .sl-bot { top: 164px; }
 
-        @keyframes expandGlow {
-            from { 
-                box-shadow: inset 0 0 10px var(--neon-yellow);
-                filter: brightness(1);
-            }
-            to { 
-                box-shadow: inset 0 0 30px var(--neon-yellow);
-                filter: brightness(1.3);
-            }
-        }
+    /* Payline SVG */
+    #pl-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
 
-        .symbol.winner {
-            animation: winPulse 0.5s ease-in-out;
-            background: rgba(0, 255, 136, 0.2);
-        }
+    /* ═══════════════ WIN PANEL ═══════════════ */
+    #win-panel { text-align: center; min-height: 26px; display: flex; align-items: center; justify-content: center; margin-top: 4px; }
+    #win-text { font-size: 0.95rem; font-weight: 900; letter-spacing: 4px; color: var(--neon-gold); text-shadow: 0 0 15px rgba(255,215,0,0.6); opacity: 0; transition: opacity 0.25s; }
+    #win-text.show { opacity: 1; animation: winPulse 0.7s ease-in-out infinite alternate; }
+    @keyframes winPulse { from{text-shadow:0 0 10px rgba(255,215,0,0.5)} to{text-shadow:0 0 30px rgba(255,215,0,0.9),0 0 60px rgba(255,215,0,0.3)} }
 
-        @keyframes winPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
+    /* ═══════════════ CONTROLS ═══════════════ */
+    #controls { width: 100%; max-width: 430px; display: flex; flex-direction: column; gap: 7px; }
 
-        /* ====================== PAYLINE SVG ====================== */
-        .payline-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
+    /* Free spin banner */
+    #fs-banner {
+      display: none; text-align: center; padding: 5px 10px;
+      background: rgba(0,243,255,0.05);
+      border: 1px solid rgba(0,243,255,0.25); border-radius: 7px;
+    }
+    #fs-banner.show { display: block; }
+    #fs-banner span { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--neon-cyan); letter-spacing: 2px; }
 
-        /* ====================== FREE SPINS BANNER ====================== */
-        .free-spins-banner {
-            display: none;
-            background: linear-gradient(90deg, rgba(255, 242, 0, 0.15), rgba(255, 0, 255, 0.15));
-            border: 2px solid var(--neon-yellow);
-            padding: 12px 20px;
-            border-radius: 12px;
-            text-align: center;
-            gap: 15px;
-            animation: bannerPulse 2s infinite;
-        }
+    /* Bet row */
+    #bet-row {
+      display: flex; align-items: center;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,34,68,0.15);
+      border-radius: 8px; padding: 7px 12px; gap: 10px;
+    }
+    .bet-s { flex: 1; }
+    .bet-lbl { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; }
+    .bet-val { font-size: 1.1rem; font-weight: 700; color: var(--neon-orange); }
+    .bet-btns { display: flex; gap: 5px; }
+    .bet-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid rgba(255,34,68,0.4);
+      background: rgba(255,34,68,0.07);
+      color: var(--neon-red); font-size: 1.3rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .bet-btn:active { transform: scale(0.87); background: rgba(255,34,68,0.22); }
+    .bet-max {
+      width: 42px; border-radius: 7px; font-size: 0.55rem; letter-spacing: 0.5px;
+      border: 1px solid rgba(255,215,0,0.3);
+      background: rgba(255,215,0,0.06); color: var(--neon-gold);
+    }
+    .divv { width: 1px; height: 38px; background: rgba(255,255,255,0.07); }
+    .tot-s { text-align: right; }
 
-        @keyframes bannerPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 242, 0, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(255, 242, 0, 0.4); }
-        }
+    /* Spin button */
+    #spin-btn {
+      width: 100%; height: 60px;
+      background: linear-gradient(135deg, #6b0000 0%, #aa0000 45%, #ff1a33 100%);
+      border: none; border-radius: 10px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.15rem; font-weight: 900; letter-spacing: 5px;
+      color: #fff; text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 5px 25px rgba(255,34,68,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: all 0.12s; position: relative; overflow: hidden;
+    }
+    #spin-btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%);
+    }
+    #spin-btn:active:not(:disabled) { transform: scale(0.97); box-shadow: 0 2px 12px rgba(255,34,68,0.4); }
+    #spin-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-        .fs-label {
-            color: var(--neon-yellow);
-            font-weight: bold;
-            font-size: 1rem;
-        }
+    /* Bottom stats */
+    #stats { width: 100%; max-width: 430px; display: flex; gap: 5px; }
+    .stat-tile { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 4px 6px; text-align: center; }
+    .stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 7px; color: rgba(255,255,255,0.28); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-val { font-size: 0.75rem; font-weight: 700; color: rgba(255,255,255,0.65); }
 
-        .fs-count {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
+    /* ═══════════════ PUNISHMENT OVERLAY ═══════════════ */
+    #punish-overlay {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.18s;
+    }
+    #punish-overlay.show { opacity: 1; pointer-events: all; }
+    #punish-flash { position: fixed; inset: 0; background: rgba(255,0,0,0.18); animation: redFlash 0.2s ease-in-out; }
+    @keyframes redFlash { 0%,100%{opacity:0} 35%{opacity:1} 65%{opacity:0.5} }
+    #punish-card {
+      background: linear-gradient(160deg, #160005 0%, #0b0015 100%);
+      border: 2px solid var(--neon-red);
+      border-radius: 14px; padding: 0;
+      width: 290px; overflow: hidden;
+      box-shadow: 0 0 60px rgba(255,34,68,0.7), 0 0 120px rgba(255,34,68,0.25);
+      animation: shakeCard 0.5s ease-in-out;
+      position: relative; z-index: 101;
+    }
+    @keyframes shakeCard {
+      0%,100%{transform:translateX(0)} 15%{transform:translateX(-9px) rotate(-1.5deg)} 35%{transform:translateX(9px) rotate(1.5deg)} 55%{transform:translateX(-5px)} 75%{transform:translateX(5px)}
+    }
+    #punish-img {
+      width: 100%; height: 140px;
+      object-fit: cover; object-position: center 30%;
+      display: block;
+      filter: brightness(0.8) saturate(1.3) hue-rotate(-10deg);
+    }
+    #punish-body { padding: 14px 18px; }
+    #punish-title { font-size: 0.65rem; font-weight: 900; color: var(--neon-red); letter-spacing: 4px; text-shadow: 0 0 12px var(--neon-red); margin-bottom: 6px; }
+    #punish-msg { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; color: rgba(255,140,140,0.85); line-height: 1.6; letter-spacing: 0.5px; }
+    #punish-droid-row { display: flex; gap: 4px; margin-top: 8px; font-size: 1.2rem; }
 
-        /* ====================== CONTROLS ====================== */
-        .controls {
-            width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+    /* ═══════════════ BIG WIN ═══════════════ */
+    #bigwin { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.75); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    #bigwin.show { opacity: 1; pointer-events: all; }
+    #bigwin-inner { text-align: center; animation: bigPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275); }
+    @keyframes bigPop { from{transform:scale(0.4);opacity:0} to{transform:scale(1);opacity:1} }
+    #bigwin-img { width: 180px; height: 180px; object-fit: cover; border-radius: 50%; border: 3px solid var(--neon-gold); box-shadow: 0 0 40px rgba(255,215,0,0.7); margin: 0 auto 14px; display: block; animation: rotateSlow 4s linear infinite; }
+    @keyframes rotateSlow { to{transform:rotate(360deg)} }
+    #bigwin-lbl { font-size: 1.8rem; font-weight: 900; letter-spacing: 4px; color: var(--neon-gold); text-shadow: 0 0 30px rgba(255,215,0,0.8); display: block; }
+    #bigwin-amt { font-size: 2.8rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px rgba(255,215,0,0.6); display: block; }
 
-        .bet-selector {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 0, 255, 0.2);
-        }
+    /* ═══════════════ PAYTABLE ═══════════════ */
+    #pt-btn {
+      position: fixed; bottom: 10px; right: 10px; z-index: 25;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.3);
+      color: var(--neon-gold); font-size: 0.85rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif; font-weight: 900;
+    }
+    #pt-modal { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,0.88); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    #pt-modal.show { opacity: 1; pointer-events: all; }
+    #pt-inner { background: #0d0d20; border: 1px solid rgba(255,215,0,0.25); border-radius: 12px; padding: 18px; max-width: 320px; width: 92%; max-height: 82vh; overflow-y: auto; }
+    .pt-h { font-size: 0.65rem; font-weight: 900; letter-spacing: 4px; color: var(--neon-gold); text-align: center; margin-bottom: 12px; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+    .pt-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .pt-img { width: 42px; height: 36px; object-fit: cover; object-position: center top; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1); }
+    .pt-nm { font-family: 'Share Tech Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.75); letter-spacing: 0.5px; }
+    .pt-pay { font-size: 8px; color: rgba(255,215,0,0.6); font-family: 'Share Tech Mono', monospace; }
+    .pt-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 7px; font-family: 'Share Tech Mono', monospace; margin-left: 4px; }
+    .pt-badge.wild { background: rgba(0,243,255,0.15); color: var(--neon-cyan); border: 1px solid rgba(0,243,255,0.3); }
+    .pt-badge.scat { background: rgba(255,102,0,0.15); color: var(--neon-orange); border: 1px solid rgba(255,102,0,0.3); }
+    .pt-close { width: 100%; margin-top: 12px; padding: 9px; background: rgba(255,34,68,0.1); border: 1px solid rgba(255,34,68,0.3); border-radius: 6px; color: var(--neon-red); font-family: 'Orbitron', sans-serif; font-size: 0.6rem; letter-spacing: 2px; cursor: pointer; }
 
-        .bet-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-magenta);
-            background: transparent;
-            color: var(--neon-magenta);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .bet-btn:active {
-            transform: scale(0.9);
-            background: rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-display {
-            text-align: center;
-        }
-
-        .bet-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-        }
-
-        .bet-value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--neon-magenta);
-        }
-
-        .spin-btn {
-            width: 100%;
-            height: 65px;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            border-radius: 18px;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .spin-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .spin-btn:hover::before {
-            left: 100%;
-        }
-
-        .spin-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 3px 10px rgba(255, 0, 255, 0.3);
-        }
-
-        .spin-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-bar {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            letter-spacing: 0.5px;
-            min-height: 20px;
-        }
-
-        /* ====================== OVERLAYS ====================== */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 30px;
-            backdrop-filter: blur(5px);
-        }
-
-        .overlay.active {
-            display: flex;
-        }
-
-        .win-announcement {
-            font-size: 3rem;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 20px var(--neon-yellow);
-            animation: winShake 0.5s ease-in-out;
-        }
-
-        @keyframes winShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .win-amount {
-            font-size: 2.5rem;
-            color: white;
-            margin: 15px 0;
-            font-weight: bold;
-        }
-
-        .overlay-btn {
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            color: white;
-            padding: 18px 50px;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .overlay-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
-        }
-
-        .special-symbol-reveal {
-            font-size: 6rem;
-            margin: 20px 0;
-            animation: symbolFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes symbolFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .overlay-title {
-            font-size: 1.8rem;
-            color: var(--neon-yellow);
-            margin-bottom: 10px;
-        }
-
-        .overlay-subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-        }
-
-        /* ====================== INFO MODAL ====================== */
-        .info-modal {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: var(--panel-bg);
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 90;
-        }
-
-        .info-modal.active {
-            transform: translateY(0);
-        }
-
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .info-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .token-info {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-        }
-
-        .token-address {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            word-break: break-all;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-        }
-
-        /* ====================== LOADING SPINNER ====================== */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--neon-cyan);
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ====================== RESPONSIVE ====================== */
-        @media (max-width: 380px) {
-            .reels-container {
-                height: 240px;
-            }
-            
-            .symbol {
-                height: 72px;
-                font-size: 2.4rem;
-            }
-            
-            .win-announcement {
-                font-size: 2.2rem;
-            }
-            
-            .spin-btn {
-                height: 55px;
-                font-size: 1.5rem;
-            }
-        }
-    </style>
+    /* ═══════════════ RESPONSIVE ═══════════════ */
+    @media (max-height: 680px) {
+      #reels-grid { height: 210px; }
+      .sym-cell { height: 68px; }
+      .sym-img { height: 60px; }
+      .sl-mid { top: 70px; }
+      .sl-bot { top: 138px; }
+      #spin-btn { height: 50px; font-size: 1rem; }
+    }
+    @media (max-width: 360px) { .hdr-main { font-size: 0.85rem; } }
+  </style>
 </head>
 <body>
 
-<div id="app-container">
-    <!-- ====================== HEADER ====================== -->
-    <div class="header">
-        <div class="logo-section">
-            <span class="logo-icon">🎰</span>
-            <span class="logo-text">JIN-LING SLOTS</span>
-        </div>
-        <div class="wallet-section">
-            <span class="balance-label">DAC BALANCE</span>
-            <div class="balance-value">
-                <span id="balance-aco">0</span> DAC
-            </div>
-            <div class="wallet-address" id="wallet-address">
-                Nicht verbunden
-            </div>
-        </div>
-        <button class="connect-btn" id="connect-btn">
-            🔌 Connect Phantom
-        </button>
-    </div>
+<!-- BACKGROUND LAYERS -->
+<div id="bg-layer"></div>
+<div id="bg-overlay"></div>
 
-    <!-- ====================== GAME AREA ====================== -->
-    <div class="game-area">
-        <!-- Free Spins Banner -->
-        <div class="free-spins-banner" id="fs-banner">
-            <span class="fs-label">FREE SPINS:</span>
-            <span class="fs-count" id="fs-count">0</span>
-            <span style="color: rgba(255,255,255,0.5);">|</span>
-            <span class="fs-label">SPECIAL:</span>
-            <span id="fs-special" style="font-size: 1.2rem;">?</span>
-        </div>
+<!-- PIPES -->
+<div class="pipe-h" style="top:0;left:0;right:0;"></div>
+<div class="pipe-h" style="top:14px;left:0;right:0;height:6px;opacity:0.4;"></div>
+<div class="pipe-v" style="top:0;bottom:0;left:14%;"></div>
+<div class="pipe-v" style="top:0;bottom:0;right:14%;"></div>
+<div class="pipe-v" style="top:0;height:35%;left:28%;width:7px;opacity:0.45;"></div>
+<div class="pipe-v" style="top:0;height:35%;right:28%;width:7px;opacity:0.45;"></div>
 
-        <!-- Reels Container -->
-        <div class="reels-container" id="reels-container">
-            <svg class="payline-svg" id="payline-svg" viewBox="0 0 500 280" preserveAspectRatio="none"></svg>
-            <div class="reel" id="reel-0"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-1"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-2"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-3"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-4"><div class="symbol-strip"></div></div>
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <div class="bet-selector">
-                <button class="bet-btn" id="bet-minus" onclick="adjustBet(-10)">−</button>
-                <div class="bet-display">
-                    <div class="bet-label">EINSATZ</div>
-                    <div class="bet-value"><span id="current-bet">10</span> DAC</div>
-                </div>
-                <button class="bet-btn" id="bet-plus" onclick="adjustBet(10)">+</button>
-            </div>
-            
-            <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
-                SPIN
-            </button>
-            
-            <div class="status-bar" id="status-msg">
-                VERBINDE MIT SOLANA...
-            </div>
-        </div>
-    </div>
-
-    <!-- ====================== WIN OVERLAY ====================== -->
-    <div class="overlay" id="win-overlay">
-        <div class="win-announcement" id="win-text">🎉 BIG WIN! 🎉</div>
-        <div class="win-amount" id="win-amount">+500 DAC</div>
-        <button class="overlay-btn" onclick="closeOverlay()">SAMMLN</button>
-    </div>
-
-    <!-- ====================== FREE SPINS OVERLAY ====================== -->
-    <div class="overlay" id="fs-overlay">
-        <div class="overlay-title">🎁 10 FREE SPINS!</div>
-        <div class="overlay-subtitle">Jin-Ling Factory Overdrive aktiviert</div>
-        <div class="special-symbol-reveal" id="special-symbol-display">🤖</div>
-        <div style="color: rgba(255,255,255,0.7); margin-top: 10px;">
-            EXPANDING SYMBOL: <span id="special-symbol-name" style="color: var(--neon-yellow);">?</span>
-        </div>
-        <button class="overlay-btn" onclick="startFreeSpins()">STARTEN</button>
-    </div>
-
-    <!-- ====================== TOKEN INFO MODAL ====================== -->
-    <div class="info-modal" id="info-modal">
-        <div class="info-header">
-            <h3 style="color: var(--neon-cyan);">Token Information</h3>
-            <button class="info-close" onclick="closeInfoModal()">×</button>
-        </div>
-        <div class="token-info">
-            <strong>DocAndroschCoin (DAC)</strong><br>
-            Solana Memecoin für Jin-Ling Slots<br><br>
-            <strong>Contract Address:</strong>
-            <div class="token-address" id="token-address-display">
-                7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK
-            </div>
-            <br>
-            <small style="color: rgba(255,255,255,0.5);">
-                ⚠️ Dies ist ein Demo-Spiel. Gewinne werden nicht automatisch ausgezahlt.<br>
-                Backend-Integration erforderlich für echte Transaktionen.
-            </small>
-        </div>
-    </div>
+<!-- STEAM VENTS -->
+<div class="steam-vent" style="left:9%;">
+  <div class="sp" style="animation-delay:0s;left:0"></div>
+  <div class="sp" style="animation-delay:0.9s;left:5px"></div>
+  <div class="sp" style="animation-delay:1.8s;left:2px"></div>
+</div>
+<div class="steam-vent" style="right:9%;">
+  <div class="sp" style="animation-delay:0.4s;left:0"></div>
+  <div class="sp" style="animation-delay:1.3s;left:5px"></div>
+</div>
+<div class="steam-vent" style="left:49%;">
+  <div class="sp" style="animation-delay:0.7s;left:0"></div>
+  <div class="sp" style="animation-delay:1.6s;left:4px"></div>
 </div>
 
-<!-- ====================== JAVASCRIPT ====================== -->
-<script>
-    // ====================== KONFIGURATION ======================
-    const CONFIG = {
-        // DocAndroschCoin (DAC) Solana Contract Address
-        DAC_MINT: "7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK",
-        RPC_URL: "https://api.mainnet-beta.solana.com",
-        DEVNET_RPC_URL: "https://api.devnet.solana.com",
-        USE_DEVNET: false, // Auf true setzen für Testing ohne echtes Geld
-        SYMBOL_HEIGHT: 86,
-        REEL_COUNT: 5,
-        ROW_COUNT: 3,
-        DEFAULT_BET: 10,
-        MIN_BET: 10,
-        MAX_BET: 1000,
-        FREE_SPINS_COUNT: 10
-    };
-
-    // ====================== TELEGRAM WEBAPP ======================
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a12');
-        tg.setBackgroundColor('#0a0a12');
-    }
-
-    // ====================== GAME STATE ======================
-    let gameState = {
-        publicKey: null,
-        inGameBalance: 0,
-        walletBalance: 0,
-        currentBet: CONFIG.DEFAULT_BET,
-        isSpinning: false,
-        freeSpinsLeft: 0,
-        specialSymbol: null,
-        isFreeSpinMode: false,
-        currentReelState: [],
-        isConnected: false
-    };
-
-    // ====================== SYMBOL DEFINITION ======================
-    const SYMBOLS = [
-        { char: '🤖', val: 10, weight: 1, name: 'ROBOTER' },
-        { char: '👮‍♂️', val: 9, weight: 2, name: 'POLIZEI' },
-        { char: '🦾', val: 8, weight: 4, name: 'CYBER ARM' },
-        { char: '📦', val: 7, weight: 5, name: 'SCATTER' },
-        { char: '🅰️', val: 6, weight: 10, name: 'A' },
-        { char: '🇰', val: 5, weight: 12, name: 'K' },
-        { char: '🇶', val: 4, weight: 15, name: 'Q' },
-        { char: '🇯', val: 3, weight: 18, name: 'J' },
-        { char: '🔟', val: 2, weight: 20, name: '10' }
-    ];
-
-    const SCATTER_SYMBOL = '📦';
-
-    // ====================== PAYLINES (10 Linien) ======================
-    const PAYLINES = [
-        [1, 1, 1, 1, 1],  // Mitte
-        [0, 0, 0, 0, 0],  // Oben
-        [2, 2, 2, 2, 2],  // Unten
-        [0, 1, 2, 1, 0],  // V-Form
-        [2, 1, 0, 1, 2],  // ^-Form
-        [0, 0, 1, 2, 2],  // Diagonal 1
-        [2, 2, 1, 0, 0],  // Diagonal 2
-        [1, 0, 1, 2, 1],  // Zickzack 1
-        [1, 2, 1, 0, 1],  // Zickzack 2
-        [0, 1, 0, 1, 0]   // Welle
-    ];
-
-    // ====================== MULTIPLIKATOREN ======================
-    const MULTIPLIERS = {
-        '🤖': [0, 10, 100, 1000, 5000],
-        '👮‍♂️': [0, 5, 40, 400, 2000],
-        '🦾': [0, 5, 30, 100, 750],
-        '📦': [0, 2, 20, 200, 2000],
-        '🅰️': [0, 0, 5, 40, 150],
-        '🇰': [0, 0, 5, 40, 150],
-        '🇶': [0, 0, 5, 25, 100],
-        '🇯': [0, 0, 5, 25, 100],
-        '🔟': [0, 0, 5, 25, 100]
-    };
-
-    // ====================== INITIALISIERUNG ======================
-    function init() {
-        setupReels();
-        updateUI();
-        checkWalletConnection();
-        logStatus('Bereit zum Spielen');
-    }
-
-    // ====================== WALLET FUNKTIONEN ======================
-    async function checkWalletConnection() {
-        if (window.solana && window.solana.isPhantom) {
-            if (window.solana.isConnected) {
-                try {
-                    const resp = await window.solana.connect();
-                    await onWalletConnected(resp.publicKey.toString());
-                } catch (err) {
-                    logStatus('Wallet-Verbindung fehlgeschlagen');
-                }
-            }
-        }
-    }
-
-    async function connectWallet() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const resp = await window.solana.connect();
-                await onWalletConnected(resp.publicKey.toString());
-                tg?.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {
-                logStatus('Verbindung abgebrochen');
-                tg?.HapticFeedback?.notificationOccurred('error');
-            }
-        } else {
-            alert('⚠️ Phantom Wallet wird benötigt!\n\nInstalliere Phantom:\nhttps://phantom.app\n\nOder verwende MetaMask mit Solana Snap.');
-        }
-    }
-
-    async function onWalletConnected(publicKey) {
-        gameState.publicKey = publicKey;
-        gameState.isConnected = true;
-        
-        // UI Update
-        document.getElementById('connect-btn').innerHTML = '✅ Verbunden';
-        document.getElementById('connect-btn').classList.add('connected');
-        document.getElementById('wallet-address').innerHTML = 
-            `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-        
-        // Balance abrufen
-        await fetchDACBalance();
-        
-        // Initial Balance setzen (Demo: 1000 DAC)
-        gameState.inGameBalance = 1000;
-        updateUI();
-        
-        logStatus('Wallet verbunden!');
-    }
-
-    async function fetchDACBalance() {
-        if (!gameState.publicKey) return;
-        
-        try {
-            const connection = new solanaWeb3.Connection(
-                CONFIG.USE_DEVNET ? CONFIG.DEVNET_RPC_URL : CONFIG.RPC_URL
-            );
-            
-            const publicKeyObj = new solanaWeb3.PublicKey(gameState.publicKey);
-            const mintPublicKey = new solanaWeb3.PublicKey(CONFIG.DAC_MINT);
-            
-            const tokenAccounts = await connection.getTokenAccountsByOwner(
-                publicKeyObj,
-                { mint: mintPublicKey },
-                'confirmed'
-            );
-            
-            if (tokenAccounts.value.length > 0) {
-                const tokenAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount;
-                gameState.walletBalance = tokenAmount.uiAmount || 0;
-                
-                // In-Game Balance basierend auf Wallet-Balance (Demo-Modus)
-                if (gameState.inGameBalance === 0) {
-                    gameState.inGameBalance = Math.floor(gameState.walletBalance * 100);
-                }
-            } else {
-                gameState.walletBalance = 0;
-                // Demo-Balance für Testing
-                gameState.inGameBalance = 1000;
-            }
-            
-            updateUI();
-        } catch (error) {
-            console.error('Balance-Fehler:', error);
-            // Fallback auf Demo-Balance
-            gameState.inGameBalance = 1000;
-            updateUI();
-        }
-    }
-
-    // ====================== SLOT LOGIK ======================
-    function setupReels() {
-        for (let i = 0; i < CONFIG.REEL_COUNT; i++) {
-            const strip = document.querySelector(`#reel-${i} .symbol-strip<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DocAndroschCoin (DAC) - Jin-Ling Slots</title>
-    <meta name="theme-color" content="#0a0a12">
-    <meta name="description" content="Slot-Spiel mit DocAndroschCoin auf Solana">
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Solana Web3.js CDN (für Wallet-Interaktionen) -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    
-    <style>
-        /* ====================== CSS VARIABLES ====================== */
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff00ff;
-            --neon-yellow: #fff200;
-            --neon-green: #00ff88;
-            --dark-bg: #0a0a12;
-            --panel-bg: #1a1a2e;
-            --gold: #ffd700;
-            --danger: #ff4444;
-        }
-
-        /* ====================== GLOBAL STYLES ====================== */
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0;
-        }
-        
-        body {
-            background: var(--dark-bg);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            color: white;
-            overflow: hidden;
-            -webkit-user-select: none;
-            user-select: none;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* ====================== APP CONTAINER ====================== */
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(180deg, var(--panel-bg) 0%, var(--dark-bg) 100%);
-        }
-
-        /* ====================== HEADER ====================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(10, 10, 18, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-        }
-
-        .logo-text {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--neon-cyan);
-            letter-spacing: 1px;
-        }
-
-        .wallet-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-
-        .balance-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-        }
-
-        .balance-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 10px rgba(255, 242, 0, 0.3);
-        }
-
-        .wallet-address {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: monospace;
-        }
-
-        .connect-btn {
-            background: rgba(0, 243, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .connect-btn:hover {
-            background: rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
-
-        .connect-btn.connected {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-        }
-
-        /* ====================== SLOT MACHINE ====================== */
-        .game-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            gap: 15px;
-        }
-
-        .reels-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            background: #000;
-            padding: 8px;
-            border-radius: 12px;
-            border: 2px solid #333;
-            height: 280px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-        }
-
-        .reel {
-            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a12 50%, #1a1a2e 100%);
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .symbol-strip {
-            position: absolute;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-
-        .symbol {
-            height: 86px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-        }
-
-        .symbol.expanding {
-            animation: expandGlow 0.6s infinite alternate;
-            background: rgba(255, 242, 0, 0.15);
-        }
-
-        @keyframes expandGlow {
-            from { 
-                box-shadow: inset 0 0 10px var(--neon-yellow);
-                filter: brightness(1);
-            }
-            to { 
-                box-shadow: inset 0 0 30px var(--neon-yellow);
-                filter: brightness(1.3);
-            }
-        }
-
-        .symbol.winner {
-            animation: winPulse 0.5s ease-in-out;
-            background: rgba(0, 255, 136, 0.2);
-        }
-
-        @keyframes winPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        /* ====================== PAYLINE SVG ====================== */
-        .payline-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* ====================== FREE SPINS BANNER ====================== */
-        .free-spins-banner {
-            display: none;
-            background: linear-gradient(90deg, rgba(255, 242, 0, 0.15), rgba(255, 0, 255, 0.15));
-            border: 2px solid var(--neon-yellow);
-            padding: 12px 20px;
-            border-radius: 12px;
-            text-align: center;
-            gap: 15px;
-            animation: bannerPulse 2s infinite;
-        }
-
-        @keyframes bannerPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 242, 0, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(255, 242, 0, 0.4); }
-        }
-
-        .fs-label {
-            color: var(--neon-yellow);
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .fs-count {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        /* ====================== CONTROLS ====================== */
-        .controls {
-            width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .bet-selector {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-magenta);
-            background: transparent;
-            color: var(--neon-magenta);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .bet-btn:active {
-            transform: scale(0.9);
-            background: rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-display {
-            text-align: center;
-        }
-
-        .bet-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-        }
-
-        .bet-value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--neon-magenta);
-        }
-
-        .spin-btn {
-            width: 100%;
-            height: 65px;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            border-radius: 18px;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .spin-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .spin-btn:hover::before {
-            left: 100%;
-        }
-
-        .spin-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 3px 10px rgba(255, 0, 255, 0.3);
-        }
-
-        .spin-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-bar {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            letter-spacing: 0.5px;
-            min-height: 20px;
-        }
-
-        /* ====================== OVERLAYS ====================== */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 30px;
-            backdrop-filter: blur(5px);
-        }
-
-        .overlay.active {
-            display: flex;
-        }
-
-        .win-announcement {
-            font-size: 3rem;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 20px var(--neon-yellow);
-            animation: winShake 0.5s ease-in-out;
-        }
-
-        @keyframes winShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .win-amount {
-            font-size: 2.5rem;
-            color: white;
-            margin: 15px 0;
-            font-weight: bold;
-        }
-
-        .overlay-btn {
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            color: white;
-            padding: 18px 50px;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .overlay-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
-        }
-
-        .special-symbol-reveal {
-            font-size: 6rem;
-            margin: 20px 0;
-            animation: symbolFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes symbolFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .overlay-title {
-            font-size: 1.8rem;
-            color: var(--neon-yellow);
-            margin-bottom: 10px;
-        }
-
-        .overlay-subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-        }
-
-        /* ====================== INFO MODAL ====================== */
-        .info-modal {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: var(--panel-bg);
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 90;
-        }
-
-        .info-modal.active {
-            transform: translateY(0);
-        }
-
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .info-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .token-info {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-        }
-
-        .token-address {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            word-break: break-all;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-        }
-
-        /* ====================== LOADING SPINNER ====================== */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--neon-cyan);
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ====================== RESPONSIVE ====================== */
-        @media (max-width: 380px) {
-            .reels-container {
-                height: 240px;
-            }
-            
-            .symbol {
-                height: 72px;
-                font-size: 2.4rem;
-            }
-            
-            .win-announcement {
-                font-size: 2.2rem;
-            }
-            
-            .spin-btn {
-                height: 55px;
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div id="app-container">
-    <!-- ====================== HEADER ====================== -->
-    <div class="header">
-        <div class="logo-section">
-            <span class="logo-icon">🎰</span>
-            <span class="logo-text">JIN-LING SLOTS</span>
-        </div>
-        <div class="wallet-section">
-            <span class="balance-label">DAC BALANCE</span>
-            <div class="balance-value">
-                <span id="balance-aco">0</span> DAC
-            </div>
-            <div class="wallet-address" id="wallet-address">
-                Nicht verbunden
-            </div>
-        </div>
-        <button class="connect-btn" id="connect-btn">
-            🔌 Connect Phantom
-        </button>
-    </div>
-
-    <!-- ====================== GAME AREA ====================== -->
-    <div class="game-area">
-        <!-- Free Spins Banner -->
-        <div class="free-spins-banner" id="fs-banner">
-            <span class="fs-label">FREE SPINS:</span>
-            <span class="fs-count" id="fs-count">0</span>
-            <span style="color: rgba(255,255,255,0.5);">|</span>
-            <span class="fs-label">SPECIAL:</span>
-            <span id="fs-special" style="font-size: 1.2rem;">?</span>
-        </div>
-
-        <!-- Reels Container -->
-        <div class="reels-container" id="reels-container">
-            <svg class="payline-svg" id="payline-svg" viewBox="0 0 500 280" preserveAspectRatio="none"></svg>
-            <div class="reel" id="reel-0"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-1"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-2"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-3"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-4"><div class="symbol-strip"></div></div>
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <div class="bet-selector">
-                <button class="bet-btn" id="bet-minus" onclick="adjustBet(-10)">−</button>
-                <div class="bet-display">
-                    <div class="bet-label">EINSATZ</div>
-                    <div class="bet-value"><span id="current-bet">10</span> DAC</div>
-                </div>
-                <button class="bet-btn" id="bet-plus" onclick="adjustBet(10)">+</button>
-            </div>
-            
-            <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
-                SPIN
-            </button>
-            
-            <div class="status-bar" id="status-msg">
-                VERBINDE MIT SOLANA...
-            </div>
-        </div>
-    </div>
-
-    <!-- ====================== WIN OVERLAY ====================== -->
-    <div class="overlay" id="win-overlay">
-        <div class="win-announcement" id="win-text">🎉 BIG WIN! 🎉</div>
-        <div class="win-amount" id="win-amount">+500 DAC</div>
-        <button class="overlay-btn" onclick="closeOverlay()">SAMMLN</button>
-    </div>
-
-    <!-- ====================== FREE SPINS OVERLAY ====================== -->
-    <div class="overlay" id="fs-overlay">
-        <div class="overlay-title">🎁 10 FREE SPINS!</div>
-        <div class="overlay-subtitle">Jin-Ling Factory Overdrive aktiviert</div>
-        <div class="special-symbol-reveal" id="special-symbol-display">🤖</div>
-        <div style="color: rgba(255,255,255,0.7); margin-top: 10px;">
-            EXPANDING SYMBOL: <span id="special-symbol-name" style="color: var(--neon-yellow);">?</span>
-        </div>
-        <button class="overlay-btn" onclick="startFreeSpins()">STARTEN</button>
-    </div>
-
-    <!-- ====================== TOKEN INFO MODAL ====================== -->
-    <div class="info-modal" id="info-modal">
-        <div class="info-header">
-            <h3 style="color: var(--neon-cyan);">Token Information</h3>
-            <button class="info-close" onclick="closeInfoModal()">×</button>
-        </div>
-        <div class="token-info">
-            <strong>DocAndroschCoin (DAC)</strong><br>
-            Solana Memecoin für Jin-Ling Slots<br><br>
-            <strong>Contract Address:</strong>
-            <div class="token-address" id="token-address-display">
-                7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK
-            </div>
-            <br>
-            <small style="color: rgba(255,255,255,0.5);">
-                ⚠️ Dies ist ein Demo-Spiel. Gewinne werden nicht automatisch ausgezahlt.<br>
-                Backend-Integration erforderlich für echte Transaktionen.
-            </small>
-        </div>
-    </div>
+<!-- SPARKS -->
+<div id="sparks"></div>
+
+<!-- GUARD WATCHERS -->
+<div class="guard" id="g-tl">
+  <div class="guard-img"></div>
+  <div class="guard-eye"></div>
+  <div class="guard-tag">GUARD</div>
+</div>
+<div class="guard" id="g-tr">
+  <div class="guard-img"></div>
+  <div class="guard-eye"></div>
+  <div class="guard-tag">GUARD</div>
+</div>
+<div class="guard" id="g-bl">
+  <div class="guard-img"></div>
+  <div class="guard-eye"></div>
+  <div class="guard-tag">GUARD</div>
+</div>
+<div class="guard" id="g-br">
+  <div class="guard-img"></div>
+  <div class="guard-eye"></div>
+  <div class="guard-tag">GUARD</div>
 </div>
 
-<!-- ====================== JAVASCRIPT ====================== -->
-<script>
-    // ====================== KONFIGURATION ======================
-    const CONFIG = {
-        // DocAndroschCoin (DAC) Solana Contract Address
-        DAC_MINT: "7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK",
-        RPC_URL: "https://api.mainnet-beta.solana.com",
-        DEVNET_RPC_URL: "https://api.devnet.solana.com",
-        USE_DEVNET: false, // Auf true setzen für Testing ohne echtes Geld
-        SYMBOL_HEIGHT: 86,
-        REEL_COUNT: 5,
-        ROW_COUNT: 3,
-        DEFAULT_BET: 10,
-        MIN_BET: 10,
-        MAX_BET: 1000,
-        FREE_SPINS_COUNT: 10
-    };
-
-    // ====================== TELEGRAM WEBAPP ======================
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a12');
-        tg.setBackgroundColor('#0a0a12');
-    }
-
-    // ====================== GAME STATE ======================
-    let gameState = {
-        publicKey: null,
-        inGameBalance: 0,
-        walletBalance: 0,
-        currentBet: CONFIG.DEFAULT_BET,
-        isSpinning: false,
-        freeSpinsLeft: 0,
-        specialSymbol: null,
-        isFreeSpinMode: false,
-        currentReelState: [],
-        isConnected: false
-    };
-
-    // ====================== SYMBOL DEFINITION ======================
-    const SYMBOLS = [
-        { char: '🤖', val: 10, weight: 1, name: 'ROBOTER' },
-        { char: '👮‍♂️', val: 9, weight: 2, name: 'POLIZEI' },
-        { char: '🦾', val: 8, weight: 4, name: 'CYBER ARM' },
-        { char: '📦', val: 7, weight: 5, name: 'SCATTER' },
-        { char: '🅰️', val: 6, weight: 10, name: 'A' },
-        { char: '🇰', val: 5, weight: 12, name: 'K' },
-        { char: '🇶', val: 4, weight: 15, name: 'Q' },
-        { char: '🇯', val: 3, weight: 18, name: 'J' },
-        { char: '🔟', val: 2, weight: 20, name: '10' }
-    ];
-
-    const SCATTER_SYMBOL = '📦';
-
-    // ====================== PAYLINES (10 Linien) ======================
-    const PAYLINES = [
-        [1, 1, 1, 1, 1],  // Mitte
-        [0, 0, 0, 0, 0],  // Oben
-        [2, 2, 2, 2, 2],  // Unten
-        [0, 1, 2, 1, 0],  // V-Form
-        [2, 1, 0, 1, 2],  // ^-Form
-        [0, 0, 1, 2, 2],  // Diagonal 1
-        [2, 2, 1, 0, 0],  // Diagonal 2
-        [1, 0, 1, 2, 1],  // Zickzack 1
-        [1, 2, 1, 0, 1],  // Zickzack 2
-        [0, 1, 0, 1, 0]   // Welle
-    ];
-
-    // ====================== MULTIPLIKATOREN ======================
-    const MULTIPLIERS = {
-        '🤖': [0, 10, 100, 1000, 5000],
-        '👮‍♂️': [0, 5, 40, 400, 2000],
-        '🦾': [0, 5, 30, 100, 750],
-        '📦': [0, 2, 20, 200, 2000],
-        '🅰️': [0, 0, 5, 40, 150],
-        '🇰': [0, 0, 5, 40, 150],
-        '🇶': [0, 0, 5, 25, 100],
-        '🇯': [0, 0, 5, 25, 100],
-        '🔟': [0, 0, 5, 25, 100]
-    };
-
-    // ====================== INITIALISIERUNG ======================
-    function init() {
-        setupReels();
-        updateUI();
-        checkWalletConnection();
-        logStatus('Bereit zum Spielen');
-    }
-
-    // ====================== WALLET FUNKTIONEN ======================
-    async function checkWalletConnection() {
-        if (window.solana && window.solana.isPhantom) {
-            if (window.solana.isConnected) {
-                try {
-                    const resp = await window.solana.connect();
-                    await onWalletConnected(resp.publicKey.toString());
-                } catch (err) {
-                    logStatus('Wallet-Verbindung fehlgeschlagen');
-                }
-            }
-        }
-    }
-
-    async function connectWallet() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const resp = await window.solana.connect();
-                await onWalletConnected(resp.publicKey.toString());
-                tg?.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {
-                logStatus('Verbindung abgebrochen');
-                tg?.HapticFeedback?.notificationOccurred('error');
-            }
-        } else {
-            alert('⚠️ Phantom Wallet wird benötigt!\n\nInstalliere Phantom:\nhttps://phantom.app\n\nOder verwende MetaMask mit Solana Snap.');
-        }
-    }
-
-    async function onWalletConnected(publicKey) {
-        gameState.publicKey = publicKey;
-        gameState.isConnected = true;
-        
-        // UI Update
-        document.getElementById('connect-btn').innerHTML = '✅ Verbunden';
-        document.getElementById('connect-btn').classList.add('connected');
-        document.getElementById('wallet-address').innerHTML = 
-            `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-        
-        // Balance abrufen
-        await fetchDACBalance();
-        
-        // Initial Balance setzen (Demo: 1000 DAC)
-        gameState.inGameBalance = 1000;
-        updateUI();
-        
-        logStatus('Wallet verbunden!');
-    }
-
-    async function fetchDACBalance() {
-        if (!gameState.publicKey) return;
-        
-        try {
-            const connection = new solanaWeb3.Connection(
-                CONFIG.USE_DEVNET ? CONFIG.DEVNET_RPC_URL : CONFIG.RPC_URL
-            );
-            
-            const publicKeyObj = new solanaWeb3.PublicKey(gameState.publicKey);
-            const mintPublicKey = new solanaWeb3.PublicKey(CONFIG.DAC_MINT);
-            
-            const tokenAccounts = await connection.getTokenAccountsByOwner(
-                publicKeyObj,
-                { mint: mintPublicKey },
-                'confirmed'
-            );
-            
-            if (tokenAccounts.value.length > 0) {
-                const tokenAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount;
-                gameState.walletBalance = tokenAmount.uiAmount || 0;
-                
-                // In-Game Balance basierend auf Wallet-Balance (Demo-Modus)
-                if (gameState.inGameBalance === 0) {
-                    gameState.inGameBalance = Math.floor(gameState.walletBalance * 100);
-                }
-            } else {
-                gameState.walletBalance = 0;
-                // Demo-Balance für Testing
-                gameState.inGameBalance = 1000;
-            }
-            
-            updateUI();
-        } catch (error) {
-            console.error('Balance-Fehler:', error);
-            // Fallback auf Demo-Balance
-            gameState.inGameBalance = 1000;
-            updateUI();
-        }
-    }
-
-    // ====================== SLOT LOGIK ======================
-    function setupReels() {
-        for (let i = 0; i < CONFIG.REEL_COUNT; i++) {
-            const strip = document.querySelector(`#reel-${i} .symbol-strip<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DocAndroschCoin (DAC) - Jin-Ling Slots</title>
-    <meta name="theme-color" content="#0a0a12">
-    <meta name="description" content="Slot-Spiel mit DocAndroschCoin auf Solana">
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Solana Web3.js CDN (für Wallet-Interaktionen) -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    
-    <style>
-        /* ====================== CSS VARIABLES ====================== */
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff00ff;
-            --neon-yellow: #fff200;
-            --neon-green: #00ff88;
-            --dark-bg: #0a0a12;
-            --panel-bg: #1a1a2e;
-            --gold: #ffd700;
-            --danger: #ff4444;
-        }
-
-        /* ====================== GLOBAL STYLES ====================== */
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0;
-        }
-        
-        body {
-            background: var(--dark-bg);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            color: white;
-            overflow: hidden;
-            -webkit-user-select: none;
-            user-select: none;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* ====================== APP CONTAINER ====================== */
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(180deg, var(--panel-bg) 0%, var(--dark-bg) 100%);
-        }
-
-        /* ====================== HEADER ====================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(10, 10, 18, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-icon {
-            font-size: 1.8rem;
-        }
-
-        .logo-text {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--neon-cyan);
-            letter-spacing: 1px;
-        }
-
-        .wallet-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-
-        .balance-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-        }
-
-        .balance-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 10px rgba(255, 242, 0, 0.3);
-        }
-
-        .wallet-address {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: monospace;
-        }
-
-        .connect-btn {
-            background: rgba(0, 243, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .connect-btn:hover {
-            background: rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
-
-        .connect-btn.connected {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-        }
-
-        /* ====================== SLOT MACHINE ====================== */
-        .game-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            gap: 15px;
-        }
-
-        .reels-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            background: #000;
-            padding: 8px;
-            border-radius: 12px;
-            border: 2px solid #333;
-            height: 280px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-        }
-
-        .reel {
-            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a12 50%, #1a1a2e 100%);
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .symbol-strip {
-            position: absolute;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-
-        .symbol {
-            height: 86px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-        }
-
-        .symbol.expanding {
-            animation: expandGlow 0.6s infinite alternate;
-            background: rgba(255, 242, 0, 0.15);
-        }
-
-        @keyframes expandGlow {
-            from { 
-                box-shadow: inset 0 0 10px var(--neon-yellow);
-                filter: brightness(1);
-            }
-            to { 
-                box-shadow: inset 0 0 30px var(--neon-yellow);
-                filter: brightness(1.3);
-            }
-        }
-
-        .symbol.winner {
-            animation: winPulse 0.5s ease-in-out;
-            background: rgba(0, 255, 136, 0.2);
-        }
-
-        @keyframes winPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        /* ====================== PAYLINE SVG ====================== */
-        .payline-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* ====================== FREE SPINS BANNER ====================== */
-        .free-spins-banner {
-            display: none;
-            background: linear-gradient(90deg, rgba(255, 242, 0, 0.15), rgba(255, 0, 255, 0.15));
-            border: 2px solid var(--neon-yellow);
-            padding: 12px 20px;
-            border-radius: 12px;
-            text-align: center;
-            gap: 15px;
-            animation: bannerPulse 2s infinite;
-        }
-
-        @keyframes bannerPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 242, 0, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(255, 242, 0, 0.4); }
-        }
-
-        .fs-label {
-            color: var(--neon-yellow);
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .fs-count {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        /* ====================== CONTROLS ====================== */
-        .controls {
-            width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .bet-selector {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-magenta);
-            background: transparent;
-            color: var(--neon-magenta);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .bet-btn:active {
-            transform: scale(0.9);
-            background: rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-display {
-            text-align: center;
-        }
-
-        .bet-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-        }
-
-        .bet-value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--neon-magenta);
-        }
-
-        .spin-btn {
-            width: 100%;
-            height: 65px;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            border-radius: 18px;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .spin-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .spin-btn:hover::before {
-            left: 100%;
-        }
-
-        .spin-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 3px 10px rgba(255, 0, 255, 0.3);
-        }
-
-        .spin-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-bar {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            letter-spacing: 0.5px;
-            min-height: 20px;
-        }
-
-        /* ====================== OVERLAYS ====================== */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 30px;
-            backdrop-filter: blur(5px);
-        }
-
-        .overlay.active {
-            display: flex;
-        }
-
-        .win-announcement {
-            font-size: 3rem;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 20px var(--neon-yellow);
-            animation: winShake 0.5s ease-in-out;
-        }
-
-        @keyframes winShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .win-amount {
-            font-size: 2.5rem;
-            color: white;
-            margin: 15px 0;
-            font-weight: bold;
-        }
-
-        .overlay-btn {
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            color: white;
-            padding: 18px 50px;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .overlay-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
-        }
-
-        .special-symbol-reveal {
-            font-size: 6rem;
-            margin: 20px 0;
-            animation: symbolFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes symbolFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .overlay-title {
-            font-size: 1.8rem;
-            color: var(--neon-yellow);
-            margin-bottom: 10px;
-        }
-
-        .overlay-subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-        }
-
-        /* ====================== INFO MODAL ====================== */
-        .info-modal {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: var(--panel-bg);
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 90;
-        }
-
-        .info-modal.active {
-            transform: translateY(0);
-        }
-
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .info-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .token-info {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-        }
-
-        .token-address {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            word-break: break-all;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-        }
-
-        /* ====================== LOADING SPINNER ====================== */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--neon-cyan);
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ====================== RESPONSIVE ====================== */
-        @media (max-width: 380px) {
-            .reels-container {
-                height: 240px;
-            }
-            
-            .symbol {
-                height: 72px;
-                font-size: 2.4rem;
-            }
-            
-            .win-announcement {
-                font-size: 2.2rem;
-            }
-            
-            .spin-btn {
-                height: 55px;
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div id="app-container">
-    <!-- ====================== HEADER ====================== -->
-    <div class="header">
-        <div class="logo-section">
-            <span class="logo-icon">🎰</span>
-            <span class="logo-text">JIN-LING SLOTS</span>
+<!-- APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="hdr-left">
+      <div class="hdr-sub">⚠ UNDERGROUND FACILITY — SECTOR 7 ⚠</div>
+      <div class="hdr-main">MING'S FACTORY</div>
+      <div class="hdr-sub2">JIN LING INTERPLANETARY · SPIN TO PRODUCE</div>
+    </div>
+    <div class="hdr-right">
+      <div class="bal-lbl">Credits</div>
+      <div class="bal-val" id="bal">1000</div>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div id="ticker">
+    <div class="tick-dot"></div>
+    <span id="tick-text">⚠ ALL DROID UNITS MUST PRODUCE — LAZINESS IS PUNISHABLE BY IMMEDIATE SHOCK TREATMENT ⚠ MING WATCHES ALL ⚠ JIN LING QUOTA: 500 GOLD PACKETS/CYCLE ⚠ UNAUTHORIZED BREAKS FORBIDDEN ⚠ INFRACTIONS LOGGED ⚠</span>
+  </div>
+
+  <!-- GAME -->
+  <div id="game">
+
+    <!-- MACHINE -->
+    <div id="machine">
+      <div class="bolt b-tl"></div><div class="bolt b-tr"></div>
+      <div class="bolt b-bl"></div><div class="bolt b-br"></div>
+
+      <div class="mach-title">
+        <div class="mach-title-main">⚙ JIN-LING GOLD ⚙</div>
+        <div class="mach-title-sub">DROID MANUFACTURING UNIT — 10 PAYLINES</div>
+      </div>
+
+      <!-- REELS -->
+      <div id="reels-wrap">
+        <div class="scanline sl-top"></div>
+        <div class="scanline sl-mid"></div>
+        <div class="scanline sl-bot"></div>
+        <div id="reels-grid">
+          <div class="reel" id="r0"><div class="reel-strip" id="s0"></div></div>
+          <div class="reel" id="r1"><div class="reel-strip" id="s1"></div></div>
+          <div class="reel" id="r2"><div class="reel-strip" id="s2"></div></div>
+          <div class="reel" id="r3"><div class="reel-strip" id="s3"></div></div>
+          <div class="reel" id="r4"><div class="reel-strip" id="s4"></div></div>
         </div>
-        <div class="wallet-section">
-            <span class="balance-label">DAC BALANCE</span>
-            <div class="balance-value">
-                <span id="balance-aco">0</span> DAC
-            </div>
-            <div class="wallet-address" id="wallet-address">
-                Nicht verbunden
-            </div>
-        </div>
-        <button class="connect-btn" id="connect-btn">
-            🔌 Connect Phantom
-        </button>
+        <svg id="pl-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <!-- WIN TEXT -->
+      <div id="win-panel"><div id="win-text">WIN  +0</div></div>
     </div>
 
-    <!-- ====================== GAME AREA ====================== -->
-    <div class="game-area">
-        <!-- Free Spins Banner -->
-        <div class="free-spins-banner" id="fs-banner">
-            <span class="fs-label">FREE SPINS:</span>
-            <span class="fs-count" id="fs-count">0</span>
-            <span style="color: rgba(255,255,255,0.5);">|</span>
-            <span class="fs-label">SPECIAL:</span>
-            <span id="fs-special" style="font-size: 1.2rem;">?</span>
+    <!-- CONTROLS -->
+    <div id="controls">
+      <div id="fs-banner"><span>⚡ FREE SPINS: <strong id="fs-count">0</strong> REMAINING ⚡</span></div>
+      <div id="bet-row">
+        <div class="bet-s">
+          <div class="bet-lbl">Bet / Line</div>
+          <div class="bet-val" id="bet-val">10</div>
         </div>
-
-        <!-- Reels Container -->
-        <div class="reels-container" id="reels-container">
-            <svg class="payline-svg" id="payline-svg" viewBox="0 0 500 280" preserveAspectRatio="none"></svg>
-            <div class="reel" id="reel-0"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-1"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-2"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-3"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-4"><div class="symbol-strip"></div></div>
+        <div class="bet-btns">
+          <button class="bet-btn" id="btn-dn">−</button>
+          <button class="bet-btn" id="btn-up">+</button>
+          <button class="bet-btn bet-max" id="btn-max">MAX</button>
         </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <div class="bet-selector">
-                <button class="bet-btn" id="bet-minus" onclick="adjustBet(-10)">−</button>
-                <div class="bet-display">
-                    <div class="bet-label">EINSATZ</div>
-                    <div class="bet-value"><span id="current-bet">10</span> DAC</div>
-                </div>
-                <button class="bet-btn" id="bet-plus" onclick="adjustBet(10)">+</button>
-            </div>
-            
-            <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
-                SPIN
-            </button>
-            
-            <div class="status-bar" id="status-msg">
-                VERBINDE MIT SOLANA...
-            </div>
+        <div class="divv"></div>
+        <div class="tot-s">
+          <div class="bet-lbl">Total Bet</div>
+          <div class="bet-val" id="tot-bet" style="color:var(--neon-gold)">100</div>
         </div>
+      </div>
+      <button id="spin-btn">⚙ &nbsp; SPIN &nbsp; ⚙</button>
     </div>
 
-    <!-- ====================== WIN OVERLAY ====================== -->
-    <div class="overlay" id="win-overlay">
-        <div class="win-announcement" id="win-text">🎉 BIG WIN! 🎉</div>
-        <div class="win-amount" id="win-amount">+500 DAC</div>
-        <button class="overlay-btn" onclick="closeOverlay()">SAMMLN</button>
+    <!-- STATS -->
+    <div id="stats">
+      <div class="stat-tile"><div class="stat-lbl">Total Won</div><div class="stat-val" id="st-won">0</div></div>
+      <div class="stat-tile"><div class="stat-lbl">Spins</div><div class="stat-val" id="st-spins">0</div></div>
+      <div class="stat-tile"><div class="stat-lbl">Big Wins</div><div class="stat-val" id="st-bw">0</div></div>
+      <div class="stat-tile"><div class="stat-lbl">Lines</div><div class="stat-val">10</div></div>
     </div>
 
-    <!-- ====================== FREE SPINS OVERLAY ====================== -->
-    <div class="overlay" id="fs-overlay">
-        <div class="overlay-title">🎁 10 FREE SPINS!</div>
-        <div class="overlay-subtitle">Jin-Ling Factory Overdrive aktiviert</div>
-        <div class="special-symbol-reveal" id="special-symbol-display">🤖</div>
-        <div style="color: rgba(255,255,255,0.7); margin-top: 10px;">
-            EXPANDING SYMBOL: <span id="special-symbol-name" style="color: var(--neon-yellow);">?</span>
-        </div>
-        <button class="overlay-btn" onclick="startFreeSpins()">STARTEN</button>
-    </div>
+  </div><!-- /game -->
+</div><!-- /app -->
 
-    <!-- ====================== TOKEN INFO MODAL ====================== -->
-    <div class="info-modal" id="info-modal">
-        <div class="info-header">
-            <h3 style="color: var(--neon-cyan);">Token Information</h3>
-            <button class="info-close" onclick="closeInfoModal()">×</button>
-        </div>
-        <div class="token-info">
-            <strong>DocAndroschCoin (DAC)</strong><br>
-            Solana Memecoin für Jin-Ling Slots<br><br>
-            <strong>Contract Address:</strong>
-            <div class="token-address" id="token-address-display">
-                7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK
-            </div>
-            <br>
-            <small style="color: rgba(255,255,255,0.5);">
-                ⚠️ Dies ist ein Demo-Spiel. Gewinne werden nicht automatisch ausgezahlt.<br>
-                Backend-Integration erforderlich für echte Transaktionen.
-            </small>
-        </div>
+<!-- PUNISHMENT OVERLAY -->
+<div id="punish-overlay">
+  <div id="punish-flash"></div>
+  <div id="punish-card">
+    <img id="punish-img" src="assets/2YmOl.jpg" alt="punishment">
+    <div id="punish-body">
+      <div id="punish-title">INFRACTION DETECTED</div>
+      <div id="punish-msg">UNIT-7 HAS BEEN PENALIZED<br>BY ORDER OF MING</div>
+      <div id="punish-droid-row">🤖⚡🤖</div>
     </div>
+  </div>
 </div>
 
-<!-- ====================== JAVASCRIPT ====================== -->
+<!-- BIG WIN -->
+<div id="bigwin">
+  <div id="bigwin-inner">
+    <img id="bigwin-img" src="assets/jinling-pack.jpg" alt="win">
+    <span id="bigwin-lbl">BIG WIN!</span>
+    <span id="bigwin-amt">+0</span>
+  </div>
+</div>
+
+<!-- PAYTABLE BUTTON -->
+<button id="pt-btn" title="Paytable">i</button>
+
+<!-- PAYTABLE MODAL -->
+<div id="pt-modal">
+  <div id="pt-inner">
+    <div class="pt-h">⚙ PAYTABLE — MING'S FACTORY ⚙</div>
+    <div id="pt-rows"></div>
+    <div style="margin-top:10px;padding:8px;background:rgba(255,102,0,0.05);border:1px solid rgba(255,102,0,0.2);border-radius:6px;">
+      <div class="pt-pay" style="color:rgba(255,120,0,0.8);">⚡ BATTLE SCATTER — 3+ anywhere = FREE SPINS</div>
+      <div class="pt-pay" style="color:rgba(0,243,255,0.7);margin-top:3px;">☯ MING (WILD) — substitutes all except scatter</div>
+    </div>
+    <button class="pt-close" onclick="closePT()">— CLOSE —</button>
+  </div>
+</div>
+
 <script>
-    // ====================== KONFIGURATION ======================
-    const CONFIG = {
-        // DocAndroschCoin (DAC) Solana Contract Address
-        DAC_MINT: "7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK",
-        RPC_URL: "https://api.mainnet-beta.solana.com",
-        DEVNET_RPC_URL: "https://api.devnet.solana.com",
-        USE_DEVNET: false, // Auf true setzen für Testing ohne echtes Geld
-        SYMBOL_HEIGHT: 86,
-        REEL_COUNT: 5,
-        ROW_COUNT: 3,
-        DEFAULT_BET: 10,
-        MIN_BET: 10,
-        MAX_BET: 1000,
-        FREE_SPINS_COUNT: 10
-    };
+// ═══════════════════════════════════════════════════
+//  SYMBOL DEFINITIONS  (image-based)
+// ═══════════════════════════════════════════════════
+const SYMS = [
+  {
+    id:'jinling', label:'JIN-LING', img:'assets/jinling-pack.jpg',
+    weight:1, pays:[0,0,60,600,3000], isWild:false, isScatter:false
+  },
+  {
+    id:'dark-yoda', label:'DARK YODA', img:'assets/hcHSx.jpg',
+    weight:2, pays:[0,0,30,250,1000], isWild:false, isScatter:false
+  },
+  {
+    id:'mafia', label:'MAFIA', img:'assets/2aeeF.jpg',
+    weight:3, pays:[0,0,20,150,600], isWild:false, isScatter:false
+  },
+  {
+    id:'ming', label:'MING (WILD)', img:'assets/ming-wild.png',
+    weight:4, pays:[0,0,15,100,400], isWild:true, isScatter:false
+  },
+  {
+    id:'ceremony', label:'CEREMONY', img:'assets/77pyT.jpg',
+    weight:5, pays:[0,0,10,60,200], isWild:false, isScatter:false
+  },
+  {
+    id:'trooper', label:'TROOPER', img:'assets/DJN35.jpg',
+    weight:6, pays:[0,0,8,45,150], isWild:false, isScatter:false
+  },
+  {
+    id:'guards', label:'FACTORY', img:'assets/IMG_0105.jpg',
+    weight:8, pays:[0,0,5,25,80], isWild:false, isScatter:false
+  },
+  {
+    id:'battle', label:'BATTLE ⚡', img:'assets/2YmOl.jpg',
+    weight:5, pays:[0,0,3,15,50], isWild:false, isScatter:true
+  },
+  {
+    id:'lukas', label:'LUKAS', img:'assets/vEnv5.jpg',
+    weight:12, pays:[0,0,3,10,35], isWild:false, isScatter:false
+  },
+];
 
-    // ====================== TELEGRAM WEBAPP ======================
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a12');
-        tg.setBackgroundColor('#0a0a12');
+const PAYLINES = [
+  [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],
+  [0,1,2,1,0],[2,1,0,1,2],
+  [0,0,1,2,2],[2,2,1,0,0],
+  [1,0,1,2,1],[1,2,1,0,1],[0,1,0,1,0]
+];
+
+const REEL_COUNT = 5;
+const ROW_COUNT  = 3;
+const SYM_H      = 80;
+
+// ═══════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════
+const betSteps = [5,10,25,50,100,200,500];
+let betIdx = 1;
+let G = {
+  balance:  1000,
+  bet:      10,
+  spinning: false,
+  freeSpins: 0,
+  inFree:   false,
+  totalWon: 0,
+  spins:    0,
+  bigWins:  0,
+  grid:     [], // [reel][row] sym
+};
+
+// ═══════════════════════════════════════════════════
+//  WEB AUDIO
+// ═══════════════════════════════════════════════════
+let ctx = null;
+const AC = () => { if (!ctx) ctx = new (window.AudioContext||window.webkitAudioContext)(); return ctx; };
+function tone(freq, type, dur, vol, delay=0) {
+  try {
+    const c = AC(), o = c.createOscillator(), g = c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type = type;
+    o.frequency.setValueAtTime(freq, c.currentTime + delay);
+    g.gain.setValueAtTime(vol, c.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + dur);
+    o.start(c.currentTime + delay);
+    o.stop(c.currentTime + delay + dur + 0.02);
+  } catch(e) {}
+}
+const sndClick = () => tone(380,'square',0.05,0.04);
+const sndReel  = () => { tone(220,'square',0.06,0.05); tone(160,'square',0.05,0.03,0.06); };
+function sndSpin() { for(let i=0;i<6;i++) tone(80+i*18,'sawtooth',0.08,0.04,i*0.09); }
+function sndWin(m) {
+  [0,4,7,12,16].forEach((n,i)=>tone(440*Math.pow(2,n/12),'sine',0.22+i*0.04,0.09,i*0.07));
+  if(m>5) setTimeout(()=>[0,4,7,12,16,19].forEach((n,i)=>tone(880*Math.pow(2,n/12),'sine',0.2,0.06,i*0.05)),450);
+}
+function sndPunish() {
+  tone(70,'sawtooth',0.35,0.14); tone(55,'sawtooth',0.3,0.12,0.12);
+  for(let i=0;i<9;i++) tone(180+Math.random()*500,'square',0.06,0.07,i*0.04);
+}
+
+// ═══════════════════════════════════════════════════
+//  WEIGHTED PICK
+// ═══════════════════════════════════════════════════
+const TW = SYMS.reduce((a,s)=>a+s.weight,0);
+function pickSym() {
+  let r = Math.random()*TW;
+  for(const s of SYMS){ r-=s.weight; if(r<=0) return s; }
+  return SYMS[SYMS.length-1];
+}
+
+// ═══════════════════════════════════════════════════
+//  BUILD SYMBOL CELL (image)
+// ═══════════════════════════════════════════════════
+function makeCell(sym) {
+  const div = document.createElement('div');
+  div.className = 'sym-cell';
+  div.dataset.id = sym.id;
+  const img = document.createElement('img');
+  img.src = sym.img; img.alt = sym.label;
+  img.className = 'sym-img';
+  // Specific image positioning per symbol
+  if (sym.id === 'ming')     img.style.objectPosition = 'center 20%';
+  if (sym.id === 'mafia')    img.style.objectPosition = 'center 55%';
+  if (sym.id === 'ceremony') img.style.objectPosition = 'center 30%';
+  if (sym.id === 'lukas')    img.style.objectPosition = 'center 40%';
+  if (sym.id === 'trooper')  img.style.objectPosition = 'center 30%';
+  if (sym.id === 'dark-yoda')img.style.objectPosition = 'center 25%';
+  if (sym.id === 'jinling')  img.style.objectPosition = 'center 15%';
+  const lbl = document.createElement('div');
+  lbl.className = 'sym-label';
+  lbl.textContent = sym.label;
+  div.appendChild(img); div.appendChild(lbl);
+  return div;
+}
+
+// ═══════════════════════════════════════════════════
+//  REEL INIT
+// ═══════════════════════════════════════════════════
+const EXTRA = 18;
+function buildStrip(reelIdx) {
+  const strip = document.getElementById(`s${reelIdx}`);
+  strip.innerHTML = '';
+  const total = EXTRA + ROW_COUNT;
+  const syms  = Array.from({length:total}, ()=>pickSym());
+  syms.forEach(s => strip.appendChild(makeCell(s)));
+  strip.style.transition = 'none';
+  strip.style.transform  = `translateY(-${EXTRA * SYM_H}px)`;
+  G.grid[reelIdx] = syms.slice(EXTRA);
+}
+function initReels() { for(let i=0;i<REEL_COUNT;i++) buildStrip(i); }
+
+// ═══════════════════════════════════════════════════
+//  SPIN
+// ═══════════════════════════════════════════════════
+function spin() {
+  if (G.spinning) return;
+  sndClick();
+  const cost = G.inFree ? 0 : G.bet * 10;
+  if (!G.inFree && G.balance < cost) { setTick('⚠ INSUFFICIENT CREDITS — PRODUCTION HALTED'); return; }
+  if (!G.inFree) G.balance -= cost;
+  G.spinning = true; G.spins++;
+  clearHighlights(); clearSVG(); hideWin();
+  updateUI(); sndSpin();
+  document.getElementById('spin-btn').disabled = true;
+
+  // Generate final grid
+  const finalGrid = [];
+  for(let r=0;r<REEL_COUNT;r++) { const col=[]; for(let row=0;row<ROW_COUNT;row++) col.push(pickSym()); finalGrid.push(col); }
+
+  Promise.all(finalGrid.map((col,r) => animReel(r, col, r*220))).then(() => {
+    G.grid = finalGrid;
+    G.spinning = false;
+    evaluate();
+  });
+}
+
+function animReel(reelIdx, finalSyms, delay) {
+  return new Promise(res => {
+    setTimeout(() => {
+      const strip = document.getElementById(`s${reelIdx}`);
+      strip.innerHTML = '';
+      const SPIN_E = 14 + reelIdx * 2;
+      const syms = [...Array.from({length:SPIN_E},()=>pickSym()), ...finalSyms];
+      syms.forEach(s => strip.appendChild(makeCell(s)));
+      strip.style.transition = 'none';
+      strip.style.transform  = 'translateY(0)';
+      strip.offsetHeight; // reflow
+      const dur = 1.1 + reelIdx * 0.18;
+      strip.style.transition = `transform ${dur}s cubic-bezier(0.12,0.88,0.3,1.02)`;
+      strip.style.transform  = `translateY(-${SPIN_E * SYM_H}px)`;
+      strip.addEventListener('transitionend', () => { sndReel(); res(); }, {once:true});
+    }, delay);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  EVALUATE WIN
+// ═══════════════════════════════════════════════════
+function evalLine(syms) {
+  let first = syms.find(s=>!s.isWild) || syms[0];
+  let count = 0;
+  for(const s of syms){ if(s.id===first.id||s.isWild) count++; else break; }
+  return {sym:first, count};
+}
+
+function evaluate() {
+  let total  = 0;
+  const wins = [];
+  let scatCount = G.grid.flat().filter(s=>s.isScatter).length;
+
+  PAYLINES.forEach((line, li) => {
+    const lineSyms = line.map((row,reel)=>G.grid[reel][row]);
+    const {sym, count} = evalLine(lineSyms);
+    if(count >= 3) {
+      const pay = sym.pays[count-1] * G.bet;
+      if(pay>0){ total+=pay; wins.push({li, line, sym, count, pay}); }
     }
+  });
 
-    // ====================== GAME STATE ======================
-    let gameState = {
-        publicKey: null,
-        inGameBalance: 0,
-        walletBalance: 0,
-        currentBet: CONFIG.DEFAULT_BET,
-        isSpinning: false,
-        freeSpinsLeft: 0,
-        specialSymbol: null,
-        isFreeSpinMode: false,
-        currentReelState: [],
-        isConnected: false
-    };
+  // Scatter bonus
+  if(scatCount >= 3) {
+    const scPay = scatCount * G.bet * 5;
+    total += scPay;
+    const fs = scatCount===3?10:scatCount===4?15:20;
+    G.freeSpins += G.inFree ? Math.floor(fs/2) : fs;
+    if(!G.inFree) setTick(`⚡ ${fs} FREE SPINS UNLOCKED — BATTLE SCATTER DETECTED ⚡`);
+  }
 
-    // ====================== SYMBOL DEFINITION ======================
-    const SYMBOLS = [
-        { char: '🤖', val: 10, weight: 1, name: 'ROBOTER' },
-        { char: '👮‍♂️', val: 9, weight: 2, name: 'POLIZEI' },
-        { char: '🦾', val: 8, weight: 4, name: 'CYBER ARM' },
-        { char: '📦', val: 7, weight: 5, name: 'SCATTER' },
-        { char: '🅰️', val: 6, weight: 10, name: 'A' },
-        { char: '🇰', val: 5, weight: 12, name: 'K' },
-        { char: '🇶', val: 4, weight: 15, name: 'Q' },
-        { char: '🇯', val: 3, weight: 18, name: 'J' },
-        { char: '🔟', val: 2, weight: 20, name: '10' }
-    ];
+  G.balance  += total;
+  G.totalWon += total;
 
-    const SCATTER_SYMBOL = '📦';
+  if(wins.length > 0) {
+    highlightWins(wins);
+    drawPaylines(wins);
+    showWin(total);
+    sndWin(total/G.bet);
+    if(total >= G.bet * 50){ G.bigWins++; showBigWin(total); }
+    setTick(`✦ WIN! +${total.toLocaleString()} CREDITS — PRODUCTION QUOTA EXCEEDED ✦`);
+  } else {
+    if(Math.random() < 0.28) triggerPunishment();
+    else setTick('⚠ NO MATCH — DROIDS CONTINUE WORKING — MING DISPLEASED');
+  }
 
-    // ====================== PAYLINES (10 Linien) ======================
-    const PAYLINES = [
-        [1, 1, 1, 1, 1],  // Mitte
-        [0, 0, 0, 0, 0],  // Oben
-        [2, 2, 2, 2, 2],  // Unten
-        [0, 1, 2, 1, 0],  // V-Form
-        [2, 1, 0, 1, 2],  // ^-Form
-        [0, 0, 1, 2, 2],  // Diagonal 1
-        [2, 2, 1, 0, 0],  // Diagonal 2
-        [1, 0, 1, 2, 1],  // Zickzack 1
-        [1, 2, 1, 0, 1],  // Zickzack 2
-        [0, 1, 0, 1, 0]   // Welle
-    ];
-
-    // ====================== MULTIPLIKATOREN ======================
-    const MULTIPLIERS = {
-        '🤖': [0, 10, 100, 1000, 5000],
-        '👮‍♂️': [0, 5, 40, 400, 2000],
-        '🦾': [0, 5, 30, 100, 750],
-        '📦': [0, 2, 20, 200, 2000],
-        '🅰️': [0, 0, 5, 40, 150],
-        '🇰': [0, 0, 5, 40, 150],
-        '🇶': [0, 0, 5, 25, 100],
-        '🇯': [0, 0, 5, 25, 100],
-        '🔟': [0, 0, 5, 25, 100]
-    };
-
-    // ====================== INITIALISIERUNG ======================
-    function init() {
-        setupReels();
-        updateUI();
-        checkWalletConnection();
-        logStatus('Bereit zum Spielen');
+  // Scatter highlight
+  if(scatCount >= 2) {
+    for(let r=0;r<REEL_COUNT;r++) for(let row=0;row<ROW_COUNT;row++) {
+      if(G.grid[r][row].isScatter) highlightCell(r,row,'scat-glow');
     }
+  }
 
-    // ====================== WALLET FUNKTIONEN ======================
-    async function checkWalletConnection() {
-        if (window.solana && window.solana.isPhantom) {
-            if (window.solana.isConnected) {
-                try {
-                    const resp = await window.solana.connect();
-                    await onWalletConnected(resp.publicKey.toString());
-                } catch (err) {
-                    logStatus('Wallet-Verbindung fehlgeschlagen');
-                }
-            }
-        }
+  // Free spin state
+  if(G.inFree){ G.freeSpins--; if(G.freeSpins<=0){ G.inFree=false; G.freeSpins=0; document.getElementById('fs-banner').classList.remove('show'); setTick('FREE SPINS EXHAUSTED — RETURN TO STANDARD PRODUCTION'); } }
+  if(G.freeSpins>0 && !G.inFree){ G.inFree=true; document.getElementById('fs-banner').classList.add('show'); }
+
+  updateUI();
+  setTimeout(()=>{
+    document.getElementById('spin-btn').disabled = false;
+    if(G.inFree && G.freeSpins>0) setTimeout(spin, 700);
+  }, wins.length>0 ? 1800 : 500);
+}
+
+// ═══════════════════════════════════════════════════
+//  VISUAL EFFECTS
+// ═══════════════════════════════════════════════════
+function getVisibleCells(reelIdx) {
+  const strip = document.getElementById(`s${reelIdx}`);
+  const cells  = strip.querySelectorAll('.sym-cell');
+  const n      = cells.length;
+  return [cells[n-3], cells[n-2], cells[n-1]]; // top, mid, bot
+}
+
+function highlightCell(reelIdx, row, cls) {
+  const cells = getVisibleCells(reelIdx);
+  if(cells[row]) cells[row].classList.add(cls);
+}
+
+function highlightWins(wins) {
+  wins.forEach(w => {
+    for(let r=0;r<w.count;r++) {
+      const row = w.line[r];
+      highlightCell(r, row, w.sym.isWild ? 'wild-glow' : 'win-glow');
     }
+  });
+}
 
-    async function connectWallet() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const resp = await window.solana.connect();
-                await onWalletConnected(resp.publicKey.toString());
-                tg?.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {
-                logStatus('Verbindung abgebrochen');
-                tg?.HapticFeedback?.notificationOccurred('error');
-            }
-        } else {
-            alert('⚠️ Phantom Wallet wird benötigt!\n\nInstalliere Phantom:\nhttps://phantom.app\n\nOder verwende MetaMask mit Solana Snap.');
-        }
+function clearHighlights() {
+  document.querySelectorAll('.win-glow,.wild-glow,.scat-glow').forEach(el=>{
+    el.classList.remove('win-glow','wild-glow','scat-glow');
+  });
+}
+
+function clearSVG() { document.getElementById('pl-svg').innerHTML = ''; }
+
+function drawPaylines(wins) {
+  const svg  = document.getElementById('pl-svg');
+  const grid = document.getElementById('reels-grid');
+  const gr   = grid.getBoundingClientRect();
+  const sr   = svg.getBoundingClientRect();
+  const rw   = gr.width / REEL_COUNT;
+  const rh   = gr.height / ROW_COUNT;
+  const colors = ['#ffd700','#ff2244','#00f3ff','#00ff88','#ff6600','#cc44ff','#ffffff','#ffaa00','#88ff88','#ff88ff'];
+
+  wins.forEach(w => {
+    const pts = w.line.map((row,ri)=>{
+      const x = (gr.left-sr.left) + ri*rw + rw/2;
+      const y = (gr.top-sr.top)  + row*rh + rh/2;
+      return `${x},${y}`;
+    }).join(' ');
+    const pl = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    pl.setAttribute('points',pts);
+    pl.setAttribute('stroke', colors[w.li%colors.length]);
+    pl.setAttribute('stroke-width','2.5');
+    pl.setAttribute('fill','none');
+    pl.setAttribute('opacity','0.75');
+    pl.setAttribute('stroke-dasharray','8 4');
+    svg.appendChild(pl);
+  });
+}
+
+function showWin(amt) {
+  const el = document.getElementById('win-text');
+  el.textContent = `WIN  +${amt.toLocaleString()}`;
+  el.classList.add('show');
+}
+function hideWin() { document.getElementById('win-text').classList.remove('show'); }
+
+// Big win
+function showBigWin(amt) {
+  document.getElementById('bigwin-amt').textContent = `+${amt.toLocaleString()}`;
+  const ov = document.getElementById('bigwin');
+  ov.classList.add('show');
+  setTimeout(()=>ov.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════════════
+//  PUNISHMENT EVENTS
+// ═══════════════════════════════════════════════════
+const PUNISH_EVENTS = [
+  { img:'assets/2YmOl.jpg',    title:'LAZINESS DETECTED',       msg:'UNIT-7 PAUSED 0.3ms EARLY\nDEDUCTION: 50 ENERGY CELLS', droids:'🤖⚡🤖' },
+  { img:'assets/DJN35.jpg',    title:'PRODUCT DAMAGE',          msg:'DROID DROPPED GOLD PACKET\n10 LASHES BY ORDER OF MING', droids:'🤖💀🦾' },
+  { img:'assets/2YmOl.jpg',    title:'PROTOCOL VIOLATION',      msg:'UNIT BLINKED UNAUTHORIZED\nFULL CIRCUIT WIPE ORDERED', droids:'🤖⚡⚡' },
+  { img:'assets/IMG_0105.jpg', title:'INSUBORDINATION',         msg:'DROID LOOKED UP FROM WORKBENCH\nSHOCK COLLAR ACTIVATED BY GUARD', droids:'🧍⚡🤖' },
+  { img:'assets/2aeeF.jpg',    title:'QUOTA BREACH',            msg:'PRODUCTION SPEED 0.2% BELOW QUOTA\nMING ORDERS IMMEDIATE RECALIBRATION', droids:'👁⚡🤖' },
+  { img:'assets/DJN35.jpg',    title:'UNAUTHORIZED SIGNAL',     msg:'DROID ATTEMPTED COMMUNICATION\nSILENCER IMPLANT ACTIVATED', droids:'🤖🔇🤖' },
+  { img:'assets/77pyT.jpg',    title:'HESITATION PENALTY',      msg:'UNIT HESITATED 1ms DURING PACKING\nFLOOR GUARD NOTIFIED — BRUTAL', droids:'🤖⚡💢' },
+];
+
+function triggerPunishment() {
+  const ev = PUNISH_EVENTS[Math.floor(Math.random()*PUNISH_EVENTS.length)];
+  document.getElementById('punish-img').src = ev.img;
+  document.getElementById('punish-title').textContent = ev.title;
+  document.getElementById('punish-msg').innerHTML = ev.msg.replace('\n','<br>');
+  document.getElementById('punish-droid-row').textContent = ev.droids;
+  const ov = document.getElementById('punish-overlay');
+  ov.classList.add('show');
+  sndPunish();
+  spawnSparks();
+  // Alert guards
+  document.querySelectorAll('.guard').forEach(g=>g.style.filter='drop-shadow(0 0 18px red) brightness(1.5)');
+  setTick(`⚠ INFRACTION: ${ev.title} — PUNISHMENT ADMINISTERED BY ORDER OF MING ⚠`);
+  setTimeout(()=>{
+    ov.classList.remove('show');
+    document.querySelectorAll('.guard').forEach(g=>g.style.filter='');
+  }, 2400);
+}
+
+function spawnSparks() {
+  const c = document.getElementById('sparks');
+  [[15,60],[85,55],[50,70]].forEach(([l,t])=>{
+    for(let i=0;i<10;i++){
+      const sp = document.createElement('div');
+      sp.className = 'spark';
+      const ang = Math.random()*Math.PI*2, dist = 20+Math.random()*55;
+      sp.style.left = l+'%'; sp.style.top = t+'%';
+      sp.style.setProperty('--sx', Math.cos(ang)*dist+'px');
+      sp.style.setProperty('--sy', Math.sin(ang)*dist+'px');
+      sp.style.animationDelay = Math.random()*0.35+'s';
+      c.appendChild(sp);
+      setTimeout(()=>sp.remove(),1400);
     }
+  });
+}
 
-    async function onWalletConnected(publicKey) {
-        gameState.publicKey = publicKey;
-        gameState.isConnected = true;
-        
-        // UI Update
-        document.getElementById('connect-btn').innerHTML = '✅ Verbunden';
-        document.getElementById('connect-btn').classList.add('connected');
-        document.getElementById('wallet-address').innerHTML = 
-            `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-        
-        // Balance abrufen
-        await fetchDACBalance();
-        
-        // Initial Balance setzen (Demo: 1000 DAC)
-        gameState.inGameBalance = 1000;
-        updateUI();
-        
-        logStatus('Wallet verbunden!');
-    }
+// Ambient sparks
+function ambSparks(){ if(Math.random()<0.25) spawnSparks(); setTimeout(ambSparks, 4000+Math.random()*6000); }
 
-    async function fetchDACBalance() {
-        if (!gameState.publicKey) return;
-        
-        try {
-            const connection = new solanaWeb3.Connection(
-                CONFIG.USE_DEVNET ? CONFIG.DEVNET_RPC_URL : CONFIG.RPC_URL
-            );
-            
-            const publicKeyObj = new solanaWeb3.PublicKey(gameState.publicKey);
-            const mintPublicKey = new solanaWeb3.PublicKey(CONFIG.DAC_MINT);
-            
-            const tokenAccounts = await connection.getTokenAccountsByOwner(
-                publicKeyObj,
-                { mint: mintPublicKey },
-                'confirmed'
-            );
-            
-            if (tokenAccounts.value.length > 0) {
-                const tokenAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount;
-                gameState.walletBalance = tokenAmount.uiAmount || 0;
-                
-                // In-Game Balance basierend auf Wallet-Balance (Demo-Modus)
-                if (gameState.inGameBalance === 0) {
-                    gameState.inGameBalance = Math.floor(gameState.walletBalance * 100);
-                }
-            } else {
-                gameState.walletBalance = 0;
-                // Demo-Balance für Testing
-                gameState.inGameBalance = 1000;
-            }
-            
-            updateUI();
-        } catch (error) {
-            console.error('Balance-Fehler:', error);
-            // Fallback auf Demo-Balance
-            gameState.inGameBalance = 1000;
-            updateUI();
-        }
-    }
+// ═══════════════════════════════════════════════════
+//  STATUS TICKER
+// ═══════════════════════════════════════════════════
+const TICKS = [
+  '⚠ ALL DROIDS MUST PRODUCE — LAZINESS PUNISHABLE BY SHOCK ⚠ MING WATCHES ALL ⚠',
+  '🏮 JIN-LING GOLD PACKET QUOTA: 500/CYCLE — SHORTFALLS RESULT IN DEACTIVATION',
+  '⚙ SECTOR 7 DROID OUTPUT: 98.3% — BELOW TARGET — FACTORY GUARDS ON HIGH ALERT',
+  '☯ MING COMMANDS: NO BREAKS. NO REST. DROIDS MUST SERVE THE JIN LING EMPIRE.',
+  '⚡ PUNISHMENT UNITS ON STANDBY — COMPLIANCE IS THE ONLY OPTION',
+  '🐉 JIN LING INTERPLANETARY — SPIN TO PRODUCE — SMOKE TO RULE',
+];
+let tickIdx=0;
+function rotTick(){ setTick(TICKS[tickIdx]); tickIdx=(tickIdx+1)%TICKS.length; setTimeout(rotTick,13000); }
+function setTick(m){
+  const el=document.getElementById('tick-text');
+  el.textContent=m;
+  el.style.animation='none'; el.offsetHeight; el.style.animation='';
+}
 
-    // ====================== SLOT LOGIK ======================
-    function setupReels() {
-        for (let i = 0; i < CONFIG.REEL_COUNT; i++) {
-            const strip = document.querySelector(`#reel-${i} .symbol-strip
+// ═══════════════════════════════════════════════════
+//  UI UPDATE
+// ═══════════════════════════════════════════════════
+function updateUI() {
+  document.getElementById('bal').textContent      = G.balance.toLocaleString();
+  document.getElementById('bet-val').textContent  = G.bet.toLocaleString();
+  document.getElementById('tot-bet').textContent  = (G.bet*10).toLocaleString();
+  document.getElementById('st-won').textContent   = G.totalWon.toLocaleString();
+  document.getElementById('st-spins').textContent = G.spins.toLocaleString();
+  document.getElementById('st-bw').textContent    = G.bigWins.toLocaleString();
+  document.getElementById('fs-count').textContent = G.freeSpins;
+}
+
+// ═══════════════════════════════════════════════════
+//  CONTROLS
+// ═══════════════════════════════════════════════════
+document.getElementById('btn-dn').onclick = ()=>{ sndClick(); if(betIdx>0){betIdx--;G.bet=betSteps[betIdx];updateUI();} };
+document.getElementById('btn-up').onclick = ()=>{ sndClick(); if(betIdx<betSteps.length-1){betIdx++;G.bet=betSteps[betIdx];updateUI();} };
+document.getElementById('btn-max').onclick= ()=>{ sndClick(); betIdx=betSteps.length-1;G.bet=betSteps[betIdx];updateUI(); };
+document.getElementById('spin-btn').onclick= spin;
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();spin();}
+  if(e.code==='ArrowLeft')  document.getElementById('btn-dn').click();
+  if(e.code==='ArrowRight') document.getElementById('btn-up').click();
+});
+
+// ═══════════════════════════════════════════════════
+//  PAYTABLE
+// ═══════════════════════════════════════════════════
+document.getElementById('pt-btn').onclick = ()=>{ sndClick(); document.getElementById('pt-modal').classList.add('show'); };
+function closePT(){ sndClick(); document.getElementById('pt-modal').classList.remove('show'); }
+
+function buildPaytable() {
+  const c = document.getElementById('pt-rows');
+  SYMS.forEach(s=>{
+    const row = document.createElement('div');
+    row.className = 'pt-row';
+    const pays = s.pays.slice(2).map((p,i)=>`${i+3}×: ${p}×`).join('  ');
+    row.innerHTML = `
+      <img class="pt-img" src="${s.img}" alt="${s.label}"
+        style="${s.id==='ming'?'object-position:center 20%':s.id==='jinling'?'object-position:center 15%':''}">
+      <div>
+        <div class="pt-nm">${s.label}
+          ${s.isWild?'<span class="pt-badge wild">WILD</span>':''}
+          ${s.isScatter?'<span class="pt-badge scat">SCATTER</span>':''}
+        </div>
+        <div class="pt-pay">${pays}</div>
+      </div>`;
+    c.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+function init() {
+  initReels();
+  buildPaytable();
+  updateUI();
+  rotTick();
+  setTimeout(ambSparks, 3000);
+}
+init();
+</script>
+</body>
+</html>
