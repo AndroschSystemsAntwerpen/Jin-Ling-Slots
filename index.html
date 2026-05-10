@@ -10,8 +10,11 @@
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Solana Web3.js CDN (für Wallet-Interaktionen) -->
+    <!-- Solana Web3.js CDN -->
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    
+    <!-- SPL Token Library -->
+    <script src="https://unpkg.com/@solana/spl-token@0.3.8/lib/index.iife.min.js"></script>
     
     <style>
         /* ====================== CSS VARIABLES ====================== */
@@ -24,6 +27,7 @@
             --panel-bg: #1a1a2e;
             --gold: #ffd700;
             --danger: #ff4444;
+            --success: #00ff88;
         }
 
         /* ====================== GLOBAL STYLES ====================== */
@@ -63,6 +67,8 @@
             border-bottom: 1px solid rgba(0, 243, 255, 0.2);
             background: rgba(10, 10, 18, 0.95);
             backdrop-filter: blur(10px);
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .logo-section {
@@ -87,6 +93,7 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 4px;
+            min-width: 150px;
         }
 
         .balance-label {
@@ -109,16 +116,23 @@
             font-family: monospace;
         }
 
-        .connect-btn {
+        .wallet-buttons {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .connect-btn, .disconnect-btn {
             background: rgba(0, 243, 255, 0.1);
             border: 1px solid var(--neon-cyan);
             color: var(--neon-cyan);
-            padding: 8px 16px;
+            padding: 8px 12px;
             border-radius: 12px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .connect-btn:hover {
@@ -132,6 +146,53 @@
             color: var(--neon-green);
         }
 
+        .disconnect-btn {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+            padding: 6px 10px;
+            font-size: 10px;
+        }
+
+        .disconnect-btn:hover {
+            background: rgba(255, 68, 68, 0.2);
+        }
+
+        /* ====================== WALLET SELECTOR ====================== */
+        .wallet-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .wallet-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .wallet-option:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        .wallet-option-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .wallet-option-name {
+            font-weight: bold;
+            color: var(--neon-cyan);
+            margin-bottom: 5px;
+        }
+
         /* ====================== SLOT MACHINE ====================== */
         .game-area {
             flex: 1;
@@ -141,6 +202,7 @@
             justify-content: center;
             padding: 15px;
             gap: 15px;
+            overflow-y: auto;
         }
 
         .reels-container {
@@ -257,7 +319,7 @@
             padding: 15px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
 
         .bet-selector {
@@ -308,847 +370,39 @@
             color: var(--neon-magenta);
         }
 
-        .spin-btn {
-            width: 100%;
-            height: 65px;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            border-radius: 18px;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .spin-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .spin-btn:hover::before {
-            left: 100%;
-        }
-
-        .spin-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 3px 10px rgba(255, 0, 255, 0.3);
-        }
-
-        .spin-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-bar {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            letter-spacing: 0.5px;
-            min-height: 20px;
-        }
-
-        /* ====================== OVERLAYS ====================== */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 30px;
-            backdrop-filter: blur(5px);
-        }
-
-        .overlay.active {
+        .button-row {
             display: flex;
-        }
-
-        .win-announcement {
-            font-size: 3rem;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 20px var(--neon-yellow);
-            animation: winShake 0.5s ease-in-out;
-        }
-
-        @keyframes winShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .win-amount {
-            font-size: 2.5rem;
-            color: white;
-            margin: 15px 0;
-            font-weight: bold;
-        }
-
-        .overlay-btn {
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            color: white;
-            padding: 18px 50px;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .overlay-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
-        }
-
-        .special-symbol-reveal {
-            font-size: 6rem;
-            margin: 20px 0;
-            animation: symbolFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes symbolFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .overlay-title {
-            font-size: 1.8rem;
-            color: var(--neon-yellow);
-            margin-bottom: 10px;
-        }
-
-        .overlay-subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-        }
-
-        /* ====================== INFO MODAL ====================== */
-        .info-modal {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: var(--panel-bg);
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 90;
-        }
-
-        .info-modal.active {
-            transform: translateY(0);
-        }
-
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .info-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .token-info {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-        }
-
-        .token-address {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            word-break: break-all;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-        }
-
-        /* ====================== LOADING SPINNER ====================== */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--neon-cyan);
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ====================== RESPONSIVE ====================== */
-        @media (max-width: 380px) {
-            .reels-container {
-                height: 240px;
-            }
-            
-            .symbol {
-                height: 72px;
-                font-size: 2.4rem;
-            }
-            
-            .win-announcement {
-                font-size: 2.2rem;
-            }
-            
-            .spin-btn {
-                height: 55px;
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div id="app-container">
-    <!-- ====================== HEADER ====================== -->
-    <div class="header">
-        <div class="logo-section">
-            <span class="logo-icon">🎰</span>
-            <span class="logo-text">JIN-LING SLOTS</span>
-        </div>
-        <div class="wallet-section">
-            <span class="balance-label">DAC BALANCE</span>
-            <div class="balance-value">
-                <span id="balance-aco">0</span> DAC
-            </div>
-            <div class="wallet-address" id="wallet-address">
-                Nicht verbunden
-            </div>
-        </div>
-        <button class="connect-btn" id="connect-btn">
-            🔌 Connect Phantom
-        </button>
-    </div>
-
-    <!-- ====================== GAME AREA ====================== -->
-    <div class="game-area">
-        <!-- Free Spins Banner -->
-        <div class="free-spins-banner" id="fs-banner">
-            <span class="fs-label">FREE SPINS:</span>
-            <span class="fs-count" id="fs-count">0</span>
-            <span style="color: rgba(255,255,255,0.5);">|</span>
-            <span class="fs-label">SPECIAL:</span>
-            <span id="fs-special" style="font-size: 1.2rem;">?</span>
-        </div>
-
-        <!-- Reels Container -->
-        <div class="reels-container" id="reels-container">
-            <svg class="payline-svg" id="payline-svg" viewBox="0 0 500 280" preserveAspectRatio="none"></svg>
-            <div class="reel" id="reel-0"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-1"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-2"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-3"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-4"><div class="symbol-strip"></div></div>
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <div class="bet-selector">
-                <button class="bet-btn" id="bet-minus" onclick="adjustBet(-10)">−</button>
-                <div class="bet-display">
-                    <div class="bet-label">EINSATZ</div>
-                    <div class="bet-value"><span id="current-bet">10</span> DAC</div>
-                </div>
-                <button class="bet-btn" id="bet-plus" onclick="adjustBet(10)">+</button>
-            </div>
-            
-            <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
-                SPIN
-            </button>
-            
-            <div class="status-bar" id="status-msg">
-                VERBINDE MIT SOLANA...
-            </div>
-        </div>
-    </div>
-
-    <!-- ====================== WIN OVERLAY ====================== -->
-    <div class="overlay" id="win-overlay">
-        <div class="win-announcement" id="win-text">🎉 BIG WIN! 🎉</div>
-        <div class="win-amount" id="win-amount">+500 DAC</div>
-        <button class="overlay-btn" onclick="closeOverlay()">SAMMLN</button>
-    </div>
-
-    <!-- ====================== FREE SPINS OVERLAY ====================== -->
-    <div class="overlay" id="fs-overlay">
-        <div class="overlay-title">🎁 10 FREE SPINS!</div>
-        <div class="overlay-subtitle">Jin-Ling Factory Overdrive aktiviert</div>
-        <div class="special-symbol-reveal" id="special-symbol-display">🤖</div>
-        <div style="color: rgba(255,255,255,0.7); margin-top: 10px;">
-            EXPANDING SYMBOL: <span id="special-symbol-name" style="color: var(--neon-yellow);">?</span>
-        </div>
-        <button class="overlay-btn" onclick="startFreeSpins()">STARTEN</button>
-    </div>
-
-    <!-- ====================== TOKEN INFO MODAL ====================== -->
-    <div class="info-modal" id="info-modal">
-        <div class="info-header">
-            <h3 style="color: var(--neon-cyan);">Token Information</h3>
-            <button class="info-close" onclick="closeInfoModal()">×</button>
-        </div>
-        <div class="token-info">
-            <strong>DocAndroschCoin (DAC)</strong><br>
-            Solana Memecoin für Jin-Ling Slots<br><br>
-            <strong>Contract Address:</strong>
-            <div class="token-address" id="token-address-display">
-                7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK
-            </div>
-            <br>
-            <small style="color: rgba(255,255,255,0.5);">
-                ⚠️ Dies ist ein Demo-Spiel. Gewinne werden nicht automatisch ausgezahlt.<br>
-                Backend-Integration erforderlich für echte Transaktionen.
-            </small>
-        </div>
-    </div>
-</div>
-
-<!-- ====================== JAVASCRIPT ====================== -->
-<script>
-    // ====================== KONFIGURATION ======================
-    const CONFIG = {
-        // DocAndroschCoin (DAC) Solana Contract Address
-        DAC_MINT: "7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK",
-        RPC_URL: "https://api.mainnet-beta.solana.com",
-        DEVNET_RPC_URL: "https://api.devnet.solana.com",
-        USE_DEVNET: false, // Auf true setzen für Testing ohne echtes Geld
-        SYMBOL_HEIGHT: 86,
-        REEL_COUNT: 5,
-        ROW_COUNT: 3,
-        DEFAULT_BET: 10,
-        MIN_BET: 10,
-        MAX_BET: 1000,
-        FREE_SPINS_COUNT: 10
-    };
-
-    // ====================== TELEGRAM WEBAPP ======================
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a12');
-        tg.setBackgroundColor('#0a0a12');
-    }
-
-    // ====================== GAME STATE ======================
-    let gameState = {
-        publicKey: null,
-        inGameBalance: 0,
-        walletBalance: 0,
-        currentBet: CONFIG.DEFAULT_BET,
-        isSpinning: false,
-        freeSpinsLeft: 0,
-        specialSymbol: null,
-        isFreeSpinMode: false,
-        currentReelState: [],
-        isConnected: false
-    };
-
-    // ====================== SYMBOL DEFINITION ======================
-    const SYMBOLS = [
-        { char: '🤖', val: 10, weight: 1, name: 'ROBOTER' },
-        { char: '👮‍♂️', val: 9, weight: 2, name: 'POLIZEI' },
-        { char: '🦾', val: 8, weight: 4, name: 'CYBER ARM' },
-        { char: '📦', val: 7, weight: 5, name: 'SCATTER' },
-        { char: '🅰️', val: 6, weight: 10, name: 'A' },
-        { char: '🇰', val: 5, weight: 12, name: 'K' },
-        { char: '🇶', val: 4, weight: 15, name: 'Q' },
-        { char: '🇯', val: 3, weight: 18, name: 'J' },
-        { char: '🔟', val: 2, weight: 20, name: '10' }
-    ];
-
-    const SCATTER_SYMBOL = '📦';
-
-    // ====================== PAYLINES (10 Linien) ======================
-    const PAYLINES = [
-        [1, 1, 1, 1, 1],  // Mitte
-        [0, 0, 0, 0, 0],  // Oben
-        [2, 2, 2, 2, 2],  // Unten
-        [0, 1, 2, 1, 0],  // V-Form
-        [2, 1, 0, 1, 2],  // ^-Form
-        [0, 0, 1, 2, 2],  // Diagonal 1
-        [2, 2, 1, 0, 0],  // Diagonal 2
-        [1, 0, 1, 2, 1],  // Zickzack 1
-        [1, 2, 1, 0, 1],  // Zickzack 2
-        [0, 1, 0, 1, 0]   // Welle
-    ];
-
-    // ====================== MULTIPLIKATOREN ======================
-    const MULTIPLIERS = {
-        '🤖': [0, 10, 100, 1000, 5000],
-        '👮‍♂️': [0, 5, 40, 400, 2000],
-        '🦾': [0, 5, 30, 100, 750],
-        '📦': [0, 2, 20, 200, 2000],
-        '🅰️': [0, 0, 5, 40, 150],
-        '🇰': [0, 0, 5, 40, 150],
-        '🇶': [0, 0, 5, 25, 100],
-        '🇯': [0, 0, 5, 25, 100],
-        '🔟': [0, 0, 5, 25, 100]
-    };
-
-    // ====================== INITIALISIERUNG ======================
-    function init() {
-        setupReels();
-        updateUI();
-        checkWalletConnection();
-        logStatus('Bereit zum Spielen');
-    }
-
-    // ====================== WALLET FUNKTIONEN ======================
-    async function checkWalletConnection() {
-        if (window.solana && window.solana.isPhantom) {
-            if (window.solana.isConnected) {
-                try {
-                    const resp = await window.solana.connect();
-                    await onWalletConnected(resp.publicKey.toString());
-                } catch (err) {
-                    logStatus('Wallet-Verbindung fehlgeschlagen');
-                }
-            }
-        }
-    }
-
-    async function connectWallet() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const resp = await window.solana.connect();
-                await onWalletConnected(resp.publicKey.toString());
-                tg?.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {
-                logStatus('Verbindung abgebrochen');
-                tg?.HapticFeedback?.notificationOccurred('error');
-            }
-        } else {
-            alert('⚠️ Phantom Wallet wird benötigt!\n\nInstalliere Phantom:\nhttps://phantom.app\n\nOder verwende MetaMask mit Solana Snap.');
-        }
-    }
-
-    async function onWalletConnected(publicKey) {
-        gameState.publicKey = publicKey;
-        gameState.isConnected = true;
-        
-        // UI Update
-        document.getElementById('connect-btn').innerHTML = '✅ Verbunden';
-        document.getElementById('connect-btn').classList.add('connected');
-        document.getElementById('wallet-address').innerHTML = 
-            `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-        
-        // Balance abrufen
-        await fetchDACBalance();
-        
-        // Initial Balance setzen (Demo: 1000 DAC)
-        gameState.inGameBalance = 1000;
-        updateUI();
-        
-        logStatus('Wallet verbunden!');
-    }
-
-    async function fetchDACBalance() {
-        if (!gameState.publicKey) return;
-        
-        try {
-            const connection = new solanaWeb3.Connection(
-                CONFIG.USE_DEVNET ? CONFIG.DEVNET_RPC_URL : CONFIG.RPC_URL
-            );
-            
-            const publicKeyObj = new solanaWeb3.PublicKey(gameState.publicKey);
-            const mintPublicKey = new solanaWeb3.PublicKey(CONFIG.DAC_MINT);
-            
-            const tokenAccounts = await connection.getTokenAccountsByOwner(
-                publicKeyObj,
-                { mint: mintPublicKey },
-                'confirmed'
-            );
-            
-            if (tokenAccounts.value.length > 0) {
-                const tokenAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount;
-                gameState.walletBalance = tokenAmount.uiAmount || 0;
-                
-                // In-Game Balance basierend auf Wallet-Balance (Demo-Modus)
-                if (gameState.inGameBalance === 0) {
-                    gameState.inGameBalance = Math.floor(gameState.walletBalance * 100);
-                }
-            } else {
-                gameState.walletBalance = 0;
-                // Demo-Balance für Testing
-                gameState.inGameBalance = 1000;
-            }
-            
-            updateUI();
-        } catch (error) {
-            console.error('Balance-Fehler:', error);
-            // Fallback auf Demo-Balance
-            gameState.inGameBalance = 1000;
-            updateUI();
-        }
-    }
-
-    // ====================== SLOT LOGIK ======================
-    function setupReels() {
-        for (let i = 0; i < CONFIG.REEL_COUNT; i++) {
-            const strip = document.querySelector(`#reel-${i} .symbol-strip<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DocAndroschCoin (DAC) - Jin-Ling Slots</title>
-    <meta name="theme-color" content="#0a0a12">
-    <meta name="description" content="Slot-Spiel mit DocAndroschCoin auf Solana">
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Solana Web3.js CDN (für Wallet-Interaktionen) -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    
-    <style>
-        /* ====================== CSS VARIABLES ====================== */
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff00ff;
-            --neon-yellow: #fff200;
-            --neon-green: #00ff88;
-            --dark-bg: #0a0a12;
-            --panel-bg: #1a1a2e;
-            --gold: #ffd700;
-            --danger: #ff4444;
-        }
-
-        /* ====================== GLOBAL STYLES ====================== */
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
-            padding: 0;
-        }
-        
-        body {
-            background: var(--dark-bg);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            color: white;
-            overflow: hidden;
-            -webkit-user-select: none;
-            user-select: none;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* ====================== APP CONTAINER ====================== */
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(180deg, var(--panel-bg) 0%, var(--dark-bg) 100%);
-        }
-
-        /* ====================== HEADER ====================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(10, 10, 18, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
             gap: 10px;
         }
 
-        .logo-icon {
-            font-size: 1.8rem;
-        }
-
-        .logo-text {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--neon-cyan);
-            letter-spacing: 1px;
-        }
-
-        .wallet-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-
-        .balance-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-        }
-
-        .balance-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 10px rgba(255, 242, 0, 0.3);
-        }
-
-        .wallet-address {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: monospace;
-        }
-
-        .connect-btn {
-            background: rgba(0, 243, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .connect-btn:hover {
-            background: rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
-
-        .connect-btn.connected {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-        }
-
-        /* ====================== SLOT MACHINE ====================== */
-        .game-area {
+        .spin-btn, .deposit-btn {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            gap: 15px;
-        }
-
-        .reels-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            background: #000;
-            padding: 8px;
-            border-radius: 12px;
-            border: 2px solid #333;
-            height: 280px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-        }
-
-        .reel {
-            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a12 50%, #1a1a2e 100%);
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .symbol-strip {
-            position: absolute;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-
-        .symbol {
-            height: 86px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-        }
-
-        .symbol.expanding {
-            animation: expandGlow 0.6s infinite alternate;
-            background: rgba(255, 242, 0, 0.15);
-        }
-
-        @keyframes expandGlow {
-            from { 
-                box-shadow: inset 0 0 10px var(--neon-yellow);
-                filter: brightness(1);
-            }
-            to { 
-                box-shadow: inset 0 0 30px var(--neon-yellow);
-                filter: brightness(1.3);
-            }
-        }
-
-        .symbol.winner {
-            animation: winPulse 0.5s ease-in-out;
-            background: rgba(0, 255, 136, 0.2);
-        }
-
-        @keyframes winPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        /* ====================== PAYLINE SVG ====================== */
-        .payline-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* ====================== FREE SPINS BANNER ====================== */
-        .free-spins-banner {
-            display: none;
-            background: linear-gradient(90deg, rgba(255, 242, 0, 0.15), rgba(255, 0, 255, 0.15));
-            border: 2px solid var(--neon-yellow);
-            padding: 12px 20px;
-            border-radius: 12px;
-            text-align: center;
-            gap: 15px;
-            animation: bannerPulse 2s infinite;
-        }
-
-        @keyframes bannerPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 242, 0, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(255, 242, 0, 0.4); }
-        }
-
-        .fs-label {
-            color: var(--neon-yellow);
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .fs-count {
-            color: white;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        /* ====================== CONTROLS ====================== */
-        .controls {
-            width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .bet-selector {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-magenta);
-            background: transparent;
-            color: var(--neon-magenta);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .bet-btn:active {
-            transform: scale(0.9);
-            background: rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-display {
-            text-align: center;
-        }
-
-        .bet-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-        }
-
-        .bet-value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--neon-magenta);
-        }
-
-        .spin-btn {
-            width: 100%;
-            height: 65px;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            height: 55px;
             border: none;
             border-radius: 18px;
             color: white;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
 
-        .spin-btn::before {
+        .spin-btn {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
+        }
+
+        .deposit-btn {
+            background: linear-gradient(135deg, var(--neon-yellow), var(--neon-magenta));
+            box-shadow: 0 6px 20px rgba(255, 242, 0, 0.3);
+            font-size: 1.2rem;
+        }
+
+        .spin-btn::before, .deposit-btn::before {
             content: '';
             position: absolute;
             top: 0;
@@ -1159,11 +413,11 @@
             transition: left 0.5s ease;
         }
 
-        .spin-btn:hover::before {
+        .spin-btn:hover::before, .deposit-btn:hover::before {
             left: 100%;
         }
 
-        .spin-btn:active {
+        .spin-btn:active, .deposit-btn:active {
             transform: translateY(2px);
             box-shadow: 0 3px 10px rgba(255, 0, 255, 0.3);
         }
@@ -1198,6 +452,7 @@
             text-align: center;
             padding: 30px;
             backdrop-filter: blur(5px);
+            overflow-y: auto;
         }
 
         .overlay.active {
@@ -1265,829 +520,193 @@
             margin-bottom: 20px;
         }
 
-        /* ====================== INFO MODAL ====================== */
-        .info-modal {
+        /* ====================== DEPOSIT MODAL ====================== */
+        .deposit-modal {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
+            max-width: 100%;
             background: var(--panel-bg);
-            border-top: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
+            border-top: 2px solid var(--neon-cyan);
+            padding: 25px;
+            border-radius: 25px 25px 0 0;
             transform: translateY(100%);
             transition: transform 0.3s ease;
-            z-index: 90;
+            z-index: 95;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .info-modal.active {
+        .deposit-modal.active {
             transform: translateY(0);
         }
 
-        .info-header {
+        .deposit-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        .info-close {
+        .deposit-title {
+            font-size: 1.5rem;
+            color: var(--neon-yellow);
+            font-weight: bold;
+        }
+
+        .close-btn {
             background: none;
             border: none;
             color: white;
-            font-size: 1.5rem;
+            font-size: 2rem;
             cursor: pointer;
-        }
-
-        .token-info {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-        }
-
-        .token-address {
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--neon-cyan);
-            word-break: break-all;
-            margin-top: 10px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-        }
-
-        /* ====================== LOADING SPINNER ====================== */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--neon-cyan);
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ====================== RESPONSIVE ====================== */
-        @media (max-width: 380px) {
-            .reels-container {
-                height: 240px;
-            }
-            
-            .symbol {
-                height: 72px;
-                font-size: 2.4rem;
-            }
-            
-            .win-announcement {
-                font-size: 2.2rem;
-            }
-            
-            .spin-btn {
-                height: 55px;
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div id="app-container">
-    <!-- ====================== HEADER ====================== -->
-    <div class="header">
-        <div class="logo-section">
-            <span class="logo-icon">🎰</span>
-            <span class="logo-text">JIN-LING SLOTS</span>
-        </div>
-        <div class="wallet-section">
-            <span class="balance-label">DAC BALANCE</span>
-            <div class="balance-value">
-                <span id="balance-aco">0</span> DAC
-            </div>
-            <div class="wallet-address" id="wallet-address">
-                Nicht verbunden
-            </div>
-        </div>
-        <button class="connect-btn" id="connect-btn">
-            🔌 Connect Phantom
-        </button>
-    </div>
-
-    <!-- ====================== GAME AREA ====================== -->
-    <div class="game-area">
-        <!-- Free Spins Banner -->
-        <div class="free-spins-banner" id="fs-banner">
-            <span class="fs-label">FREE SPINS:</span>
-            <span class="fs-count" id="fs-count">0</span>
-            <span style="color: rgba(255,255,255,0.5);">|</span>
-            <span class="fs-label">SPECIAL:</span>
-            <span id="fs-special" style="font-size: 1.2rem;">?</span>
-        </div>
-
-        <!-- Reels Container -->
-        <div class="reels-container" id="reels-container">
-            <svg class="payline-svg" id="payline-svg" viewBox="0 0 500 280" preserveAspectRatio="none"></svg>
-            <div class="reel" id="reel-0"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-1"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-2"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-3"><div class="symbol-strip"></div></div>
-            <div class="reel" id="reel-4"><div class="symbol-strip"></div></div>
-        </div>
-
-        <!-- Controls -->
-        <div class="controls">
-            <div class="bet-selector">
-                <button class="bet-btn" id="bet-minus" onclick="adjustBet(-10)">−</button>
-                <div class="bet-display">
-                    <div class="bet-label">EINSATZ</div>
-                    <div class="bet-value"><span id="current-bet">10</span> DAC</div>
-                </div>
-                <button class="bet-btn" id="bet-plus" onclick="adjustBet(10)">+</button>
-            </div>
-            
-            <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
-                SPIN
-            </button>
-            
-            <div class="status-bar" id="status-msg">
-                VERBINDE MIT SOLANA...
-            </div>
-        </div>
-    </div>
-
-    <!-- ====================== WIN OVERLAY ====================== -->
-    <div class="overlay" id="win-overlay">
-        <div class="win-announcement" id="win-text">🎉 BIG WIN! 🎉</div>
-        <div class="win-amount" id="win-amount">+500 DAC</div>
-        <button class="overlay-btn" onclick="closeOverlay()">SAMMLN</button>
-    </div>
-
-    <!-- ====================== FREE SPINS OVERLAY ====================== -->
-    <div class="overlay" id="fs-overlay">
-        <div class="overlay-title">🎁 10 FREE SPINS!</div>
-        <div class="overlay-subtitle">Jin-Ling Factory Overdrive aktiviert</div>
-        <div class="special-symbol-reveal" id="special-symbol-display">🤖</div>
-        <div style="color: rgba(255,255,255,0.7); margin-top: 10px;">
-            EXPANDING SYMBOL: <span id="special-symbol-name" style="color: var(--neon-yellow);">?</span>
-        </div>
-        <button class="overlay-btn" onclick="startFreeSpins()">STARTEN</button>
-    </div>
-
-    <!-- ====================== TOKEN INFO MODAL ====================== -->
-    <div class="info-modal" id="info-modal">
-        <div class="info-header">
-            <h3 style="color: var(--neon-cyan);">Token Information</h3>
-            <button class="info-close" onclick="closeInfoModal()">×</button>
-        </div>
-        <div class="token-info">
-            <strong>DocAndroschCoin (DAC)</strong><br>
-            Solana Memecoin für Jin-Ling Slots<br><br>
-            <strong>Contract Address:</strong>
-            <div class="token-address" id="token-address-display">
-                7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK
-            </div>
-            <br>
-            <small style="color: rgba(255,255,255,0.5);">
-                ⚠️ Dies ist ein Demo-Spiel. Gewinne werden nicht automatisch ausgezahlt.<br>
-                Backend-Integration erforderlich für echte Transaktionen.
-            </small>
-        </div>
-    </div>
-</div>
-
-<!-- ====================== JAVASCRIPT ====================== -->
-<script>
-    // ====================== KONFIGURATION ======================
-    const CONFIG = {
-        // DocAndroschCoin (DAC) Solana Contract Address
-        DAC_MINT: "7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK",
-        RPC_URL: "https://api.mainnet-beta.solana.com",
-        DEVNET_RPC_URL: "https://api.devnet.solana.com",
-        USE_DEVNET: false, // Auf true setzen für Testing ohne echtes Geld
-        SYMBOL_HEIGHT: 86,
-        REEL_COUNT: 5,
-        ROW_COUNT: 3,
-        DEFAULT_BET: 10,
-        MIN_BET: 10,
-        MAX_BET: 1000,
-        FREE_SPINS_COUNT: 10
-    };
-
-    // ====================== TELEGRAM WEBAPP ======================
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a12');
-        tg.setBackgroundColor('#0a0a12');
-    }
-
-    // ====================== GAME STATE ======================
-    let gameState = {
-        publicKey: null,
-        inGameBalance: 0,
-        walletBalance: 0,
-        currentBet: CONFIG.DEFAULT_BET,
-        isSpinning: false,
-        freeSpinsLeft: 0,
-        specialSymbol: null,
-        isFreeSpinMode: false,
-        currentReelState: [],
-        isConnected: false
-    };
-
-    // ====================== SYMBOL DEFINITION ======================
-    const SYMBOLS = [
-        { char: '🤖', val: 10, weight: 1, name: 'ROBOTER' },
-        { char: '👮‍♂️', val: 9, weight: 2, name: 'POLIZEI' },
-        { char: '🦾', val: 8, weight: 4, name: 'CYBER ARM' },
-        { char: '📦', val: 7, weight: 5, name: 'SCATTER' },
-        { char: '🅰️', val: 6, weight: 10, name: 'A' },
-        { char: '🇰', val: 5, weight: 12, name: 'K' },
-        { char: '🇶', val: 4, weight: 15, name: 'Q' },
-        { char: '🇯', val: 3, weight: 18, name: 'J' },
-        { char: '🔟', val: 2, weight: 20, name: '10' }
-    ];
-
-    const SCATTER_SYMBOL = '📦';
-
-    // ====================== PAYLINES (10 Linien) ======================
-    const PAYLINES = [
-        [1, 1, 1, 1, 1],  // Mitte
-        [0, 0, 0, 0, 0],  // Oben
-        [2, 2, 2, 2, 2],  // Unten
-        [0, 1, 2, 1, 0],  // V-Form
-        [2, 1, 0, 1, 2],  // ^-Form
-        [0, 0, 1, 2, 2],  // Diagonal 1
-        [2, 2, 1, 0, 0],  // Diagonal 2
-        [1, 0, 1, 2, 1],  // Zickzack 1
-        [1, 2, 1, 0, 1],  // Zickzack 2
-        [0, 1, 0, 1, 0]   // Welle
-    ];
-
-    // ====================== MULTIPLIKATOREN ======================
-    const MULTIPLIERS = {
-        '🤖': [0, 10, 100, 1000, 5000],
-        '👮‍♂️': [0, 5, 40, 400, 2000],
-        '🦾': [0, 5, 30, 100, 750],
-        '📦': [0, 2, 20, 200, 2000],
-        '🅰️': [0, 0, 5, 40, 150],
-        '🇰': [0, 0, 5, 40, 150],
-        '🇶': [0, 0, 5, 25, 100],
-        '🇯': [0, 0, 5, 25, 100],
-        '🔟': [0, 0, 5, 25, 100]
-    };
-
-    // ====================== INITIALISIERUNG ======================
-    function init() {
-        setupReels();
-        updateUI();
-        checkWalletConnection();
-        logStatus('Bereit zum Spielen');
-    }
-
-    // ====================== WALLET FUNKTIONEN ======================
-    async function checkWalletConnection() {
-        if (window.solana && window.solana.isPhantom) {
-            if (window.solana.isConnected) {
-                try {
-                    const resp = await window.solana.connect();
-                    await onWalletConnected(resp.publicKey.toString());
-                } catch (err) {
-                    logStatus('Wallet-Verbindung fehlgeschlagen');
-                }
-            }
-        }
-    }
-
-    async function connectWallet() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const resp = await window.solana.connect();
-                await onWalletConnected(resp.publicKey.toString());
-                tg?.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {
-                logStatus('Verbindung abgebrochen');
-                tg?.HapticFeedback?.notificationOccurred('error');
-            }
-        } else {
-            alert('⚠️ Phantom Wallet wird benötigt!\n\nInstalliere Phantom:\nhttps://phantom.app\n\nOder verwende MetaMask mit Solana Snap.');
-        }
-    }
-
-    async function onWalletConnected(publicKey) {
-        gameState.publicKey = publicKey;
-        gameState.isConnected = true;
-        
-        // UI Update
-        document.getElementById('connect-btn').innerHTML = '✅ Verbunden';
-        document.getElementById('connect-btn').classList.add('connected');
-        document.getElementById('wallet-address').innerHTML = 
-            `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-        
-        // Balance abrufen
-        await fetchDACBalance();
-        
-        // Initial Balance setzen (Demo: 1000 DAC)
-        gameState.inGameBalance = 1000;
-        updateUI();
-        
-        logStatus('Wallet verbunden!');
-    }
-
-    async function fetchDACBalance() {
-        if (!gameState.publicKey) return;
-        
-        try {
-            const connection = new solanaWeb3.Connection(
-                CONFIG.USE_DEVNET ? CONFIG.DEVNET_RPC_URL : CONFIG.RPC_URL
-            );
-            
-            const publicKeyObj = new solanaWeb3.PublicKey(gameState.publicKey);
-            const mintPublicKey = new solanaWeb3.PublicKey(CONFIG.DAC_MINT);
-            
-            const tokenAccounts = await connection.getTokenAccountsByOwner(
-                publicKeyObj,
-                { mint: mintPublicKey },
-                'confirmed'
-            );
-            
-            if (tokenAccounts.value.length > 0) {
-                const tokenAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount;
-                gameState.walletBalance = tokenAmount.uiAmount || 0;
-                
-                // In-Game Balance basierend auf Wallet-Balance (Demo-Modus)
-                if (gameState.inGameBalance === 0) {
-                    gameState.inGameBalance = Math.floor(gameState.walletBalance * 100);
-                }
-            } else {
-                gameState.walletBalance = 0;
-                // Demo-Balance für Testing
-                gameState.inGameBalance = 1000;
-            }
-            
-            updateUI();
-        } catch (error) {
-            console.error('Balance-Fehler:', error);
-            // Fallback auf Demo-Balance
-            gameState.inGameBalance = 1000;
-            updateUI();
-        }
-    }
-
-    // ====================== SLOT LOGIK ======================
-    function setupReels() {
-        for (let i = 0; i < CONFIG.REEL_COUNT; i++) {
-            const strip = document.querySelector(`#reel-${i} .symbol-strip<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>DocAndroschCoin (DAC) - Jin-Ling Slots</title>
-    <meta name="theme-color" content="#0a0a12">
-    <meta name="description" content="Slot-Spiel mit DocAndroschCoin auf Solana">
-    
-    <!-- Telegram WebApp SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Solana Web3.js CDN (für Wallet-Interaktionen) -->
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    
-    <style>
-        /* ====================== CSS VARIABLES ====================== */
-        :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff00ff;
-            --neon-yellow: #fff200;
-            --neon-green: #00ff88;
-            --dark-bg: #0a0a12;
-            --panel-bg: #1a1a2e;
-            --gold: #ffd700;
-            --danger: #ff4444;
-        }
-
-        /* ====================== GLOBAL STYLES ====================== */
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            margin: 0; 
             padding: 0;
-        }
-        
-        body {
-            background: var(--dark-bg);
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            color: white;
-            overflow: hidden;
-            -webkit-user-select: none;
-            user-select: none;
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* ====================== APP CONTAINER ====================== */
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(180deg, var(--panel-bg) 0%, var(--dark-bg) 100%);
-        }
-
-        /* ====================== HEADER ====================== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(0, 243, 255, 0.2);
-            background: rgba(10, 10, 18, 0.95);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo-section {
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
         }
 
-        .logo-icon {
-            font-size: 1.8rem;
+        .deposit-section {
+            margin-bottom: 25px;
         }
 
-        .logo-text {
+        .section-label {
             font-size: 0.9rem;
-            font-weight: bold;
             color: var(--neon-cyan);
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .wallet-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
+        .crypto-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .balance-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 0.5px;
-        }
-
-        .balance-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 10px rgba(255, 242, 0, 0.3);
-        }
-
-        .wallet-address {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: monospace;
-        }
-
-        .connect-btn {
-            background: rgba(0, 243, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
+        .crypto-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .connect-btn:hover {
-            background: rgba(0, 243, 255, 0.2);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
-        }
-
-        .connect-btn.connected {
-            background: rgba(0, 255, 136, 0.1);
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-        }
-
-        /* ====================== SLOT MACHINE ====================== */
-        .game-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-            gap: 15px;
-        }
-
-        .reels-container {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            background: #000;
-            padding: 8px;
-            border-radius: 12px;
-            border: 2px solid #333;
-            height: 280px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-        }
-
-        .reel {
-            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a12 50%, #1a1a2e 100%);
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .symbol-strip {
-            position: absolute;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: transform 2s cubic-bezier(0.45, 0.05, 0.55, 0.95);
-        }
-
-        .symbol {
-            height: 86px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            position: relative;
-        }
-
-        .symbol.expanding {
-            animation: expandGlow 0.6s infinite alternate;
-            background: rgba(255, 242, 0, 0.15);
-        }
-
-        @keyframes expandGlow {
-            from { 
-                box-shadow: inset 0 0 10px var(--neon-yellow);
-                filter: brightness(1);
-            }
-            to { 
-                box-shadow: inset 0 0 30px var(--neon-yellow);
-                filter: brightness(1.3);
-            }
-        }
-
-        .symbol.winner {
-            animation: winPulse 0.5s ease-in-out;
-            background: rgba(0, 255, 136, 0.2);
-        }
-
-        @keyframes winPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        /* ====================== PAYLINE SVG ====================== */
-        .payline-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* ====================== FREE SPINS BANNER ====================== */
-        .free-spins-banner {
-            display: none;
-            background: linear-gradient(90deg, rgba(255, 242, 0, 0.15), rgba(255, 0, 255, 0.15));
-            border: 2px solid var(--neon-yellow);
-            padding: 12px 20px;
-            border-radius: 12px;
+            color: white;
             text-align: center;
-            gap: 15px;
-            animation: bannerPulse 2s infinite;
+            font-size: 0.9rem;
         }
 
-        @keyframes bannerPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 242, 0, 0.2); }
-            50% { box-shadow: 0 0 25px rgba(255, 242, 0, 0.4); }
+        .crypto-btn:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.1);
         }
 
-        .fs-label {
+        .crypto-btn.active {
+            border-color: var(--neon-yellow);
+            background: rgba(255, 242, 0, 0.1);
             color: var(--neon-yellow);
-            font-weight: bold;
-            font-size: 1rem;
         }
 
-        .fs-count {
+        .crypto-icon {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.05);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+        }
+
+        .exchange-rate {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .rate-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .rate-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .rate-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .rate-value {
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .deposit-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--neon-yellow), var(--neon-magenta));
+            border: none;
+            border-radius: 12px;
             color: white;
             font-size: 1.2rem;
             font-weight: bold;
-        }
-
-        /* ====================== CONTROLS ====================== */
-        .controls {
-            width: 100%;
-            max-width: 400px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .bet-selector {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 12px 20px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-magenta);
-            background: transparent;
-            color: var(--neon-magenta);
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .bet-btn:active {
-            transform: scale(0.9);
-            background: rgba(255, 0, 255, 0.2);
-        }
-
-        .bet-display {
-            text-align: center;
-        }
-
-        .bet-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-        }
-
-        .bet-value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--neon-magenta);
-        }
-
-        .spin-btn {
-            width: 100%;
-            height: 65px;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            border-radius: 18px;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.4);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .spin-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.5s ease;
+        .deposit-submit:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 242, 0, 0.4);
         }
 
-        .spin-btn:hover::before {
-            left: 100%;
-        }
-
-        .spin-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 3px 10px rgba(255, 0, 255, 0.3);
-        }
-
-        .spin-btn:disabled {
+        .deposit-submit:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none;
         }
 
-        .status-bar {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.4);
-            text-align: center;
-            letter-spacing: 0.5px;
-            min-height: 20px;
+        .info-text {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 12px;
+            line-height: 1.5;
         }
 
-        /* ====================== OVERLAYS ====================== */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            text-align: center;
-            padding: 30px;
-            backdrop-filter: blur(5px);
-        }
-
-        .overlay.active {
-            display: flex;
-        }
-
-        .win-announcement {
-            font-size: 3rem;
-            color: var(--neon-yellow);
-            text-shadow: 0 0 20px var(--neon-yellow);
-            animation: winShake 0.5s ease-in-out;
-        }
-
-        @keyframes winShake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .win-amount {
-            font-size: 2.5rem;
-            color: white;
-            margin: 15px 0;
-            font-weight: bold;
-        }
-
-        .overlay-btn {
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
-            border: none;
-            color: white;
-            padding: 18px 50px;
-            border-radius: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .overlay-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
-        }
-
-        .special-symbol-reveal {
-            font-size: 6rem;
-            margin: 20px 0;
-            animation: symbolFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes symbolFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .overlay-title {
-            font-size: 1.8rem;
-            color: var(--neon-yellow);
-            margin-bottom: 10px;
-        }
-
-        .overlay-subtitle {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-        }
-
-        /* ====================== INFO MODAL ====================== */
+        /* ====================== TOKEN INFO MODAL ====================== */
         .info-modal {
             position: fixed;
             bottom: 0;
@@ -2155,7 +774,26 @@
         }
 
         /* ====================== RESPONSIVE ====================== */
-        @media (max-width: 380px) {
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .wallet-section {
+                order: 3;
+                width: 100%;
+            }
+
+            .wallet-buttons {
+                flex-direction: row;
+                width: 100%;
+            }
+
+            .connect-btn, .disconnect-btn {
+                flex: 1;
+            }
+
             .reels-container {
                 height: 240px;
             }
@@ -2169,9 +807,13 @@
                 font-size: 2.2rem;
             }
             
-            .spin-btn {
-                height: 55px;
-                font-size: 1.5rem;
+            .spin-btn, .deposit-btn {
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .crypto-options {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -2193,10 +835,15 @@
             <div class="wallet-address" id="wallet-address">
                 Nicht verbunden
             </div>
+            <div class="wallet-buttons">
+                <button class="connect-btn" id="connect-btn" onclick="openWalletSelector()">
+                    🔌 Wallet
+                </button>
+                <button class="disconnect-btn" id="disconnect-btn" style="display:none;" onclick="disconnectWallet()">
+                    🚪 Trennen
+                </button>
+            </div>
         </div>
-        <button class="connect-btn" id="connect-btn">
-            🔌 Connect Phantom
-        </button>
     </div>
 
     <!-- ====================== GAME AREA ====================== -->
@@ -2231,13 +878,40 @@
                 <button class="bet-btn" id="bet-plus" onclick="adjustBet(10)">+</button>
             </div>
             
-            <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
-                SPIN
-            </button>
+            <div class="button-row">
+                <button class="spin-btn" id="spin-btn" onclick="handleSpin()">
+                    SPIN
+                </button>
+                <button class="deposit-btn" id="deposit-btn" onclick="openDepositModal()">
+                    💰 ADD
+                </button>
+            </div>
             
             <div class="status-bar" id="status-msg">
                 VERBINDE MIT SOLANA...
             </div>
+        </div>
+    </div>
+
+    <!-- ====================== WALLET SELECTOR OVERLAY ====================== -->
+    <div class="overlay" id="wallet-selector-overlay">
+        <div style="width: 100%; max-width: 300px;">
+            <div class="overlay-title" style="margin-bottom: 30px;">🔌 WALLET VERBINDEN</div>
+            <div class="wallet-selector">
+                <div class="wallet-option" onclick="connectPhantom()">
+                    <div class="wallet-option-icon">👻</div>
+                    <div class="wallet-option-name">Phantom</div>
+                    <small style="color: rgba(255,255,255,0.5);">Solana</small>
+                </div>
+                <div class="wallet-option" onclick="connectMetaMask()">
+                    <div class="wallet-option-icon">🦊</div>
+                    <div class="wallet-option-name">MetaMask</div>
+                    <small style="color: rgba(255,255,255,0.5);">Snap</small>
+                </div>
+            </div>
+            <button class="overlay-btn" onclick="closeWalletSelector()" style="width: 100%; margin-top: 20px;">
+                ABBRECHEN
+            </button>
         </div>
     </div>
 
@@ -2259,6 +933,63 @@
         <button class="overlay-btn" onclick="startFreeSpins()">STARTEN</button>
     </div>
 
+    <!-- ====================== DEPOSIT MODAL ====================== -->
+    <div class="deposit-modal" id="deposit-modal">
+        <div class="deposit-header">
+            <div class="deposit-title">💰 AUFLADEN</div>
+            <button class="close-btn" onclick="closeDepositModal()">×</button>
+        </div>
+
+        <div class="deposit-section">
+            <div class="section-label">Wähle Kryptowährung</div>
+            <div class="crypto-options">
+                <button class="crypto-btn active" onclick="selectCrypto('SOL')">
+                    <div class="crypto-icon">◎</div>
+                    SOL
+                </button>
+                <button class="crypto-btn" onclick="selectCrypto('USDC')">
+                    <div class="crypto-icon">💵</div>
+                    USDC
+                </button>
+                <button class="crypto-btn" onclick="selectCrypto('USDT')">
+                    <div class="crypto-icon">💲</div>
+                    USDT
+                </button>
+            </div>
+        </div>
+
+        <div class="deposit-section">
+            <div class="input-group">
+                <label class="input-label">Menge <span id="selected-crypto">SOL</span></label>
+                <input type="number" class="input-field" id="crypto-amount" placeholder="z.B. 0.5" min="0.01" step="0.01">
+            </div>
+        </div>
+
+        <div class="exchange-rate">
+            <div class="rate-row">
+                <span class="rate-label">Aktueller Kurs:</span>
+                <span class="rate-value" id="exchange-rate">1 SOL = $180</span>
+            </div>
+            <div class="rate-row">
+                <span class="rate-label">Du erhältst:</span>
+                <span class="rate-value" id="dac-receive">0 DAC</span>
+            </div>
+            <div class="rate-row" style="border-top: 1px solid rgba(0, 243, 255, 0.2); padding-top: 8px; margin-top: 8px;">
+                <span class="rate-label">Gebühr:</span>
+                <span class="rate-value" id="fee-amount">0 DAC</span>
+            </div>
+        </div>
+
+        <button class="deposit-submit" id="deposit-submit" onclick="submitDeposit()">
+            💳 JETZT AUFLADEN
+        </button>
+
+        <div class="info-text">
+            ⚠️ Transaktionen werden sicher über Solana verarbeitet.<br>
+            Mindestbetrag: 0.01 SOL | Maximalbetrag: 100 SOL
+        </div>
+    </div>
+
     <!-- ====================== TOKEN INFO MODAL ====================== -->
     <div class="info-modal" id="info-modal">
         <div class="info-header">
@@ -2274,194 +1005,16 @@
             </div>
             <br>
             <small style="color: rgba(255,255,255,0.5);">
-                ⚠️ Dies ist ein Demo-Spiel. Gewinne werden nicht automatisch ausgezahlt.<br>
-                Backend-Integration erforderlich für echte Transaktionen.
+                🚀 Pump.fun: <a href="https://pump.fun/coin/7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK" target="_blank" style="color: var(--neon-cyan);">Anschauen</a><br>
+                💻 GitHub: <a href="https://github.com/AndroschSystemsAntwerpen/Jin-LingSlotBot01" target="_blank" style="color: var(--neon-cyan);">Repository</a>
             </small>
         </div>
     </div>
 </div>
 
 <!-- ====================== JAVASCRIPT ====================== -->
-<script>
-    // ====================== KONFIGURATION ======================
-    const CONFIG = {
-        // DocAndroschCoin (DAC) Solana Contract Address
-        DAC_MINT: "7FEUmYaUT1Ed6oFaRvrmpRr7YFg8DLjwxeX86qsx6TTK",
-        RPC_URL: "https://api.mainnet-beta.solana.com",
-        DEVNET_RPC_URL: "https://api.devnet.solana.com",
-        USE_DEVNET: false, // Auf true setzen für Testing ohne echtes Geld
-        SYMBOL_HEIGHT: 86,
-        REEL_COUNT: 5,
-        ROW_COUNT: 3,
-        DEFAULT_BET: 10,
-        MIN_BET: 10,
-        MAX_BET: 1000,
-        FREE_SPINS_COUNT: 10
-    };
-
-    // ====================== TELEGRAM WEBAPP ======================
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        tg.setHeaderColor('#0a0a12');
-        tg.setBackgroundColor('#0a0a12');
-    }
-
-    // ====================== GAME STATE ======================
-    let gameState = {
-        publicKey: null,
-        inGameBalance: 0,
-        walletBalance: 0,
-        currentBet: CONFIG.DEFAULT_BET,
-        isSpinning: false,
-        freeSpinsLeft: 0,
-        specialSymbol: null,
-        isFreeSpinMode: false,
-        currentReelState: [],
-        isConnected: false
-    };
-
-    // ====================== SYMBOL DEFINITION ======================
-    const SYMBOLS = [
-        { char: '🤖', val: 10, weight: 1, name: 'ROBOTER' },
-        { char: '👮‍♂️', val: 9, weight: 2, name: 'POLIZEI' },
-        { char: '🦾', val: 8, weight: 4, name: 'CYBER ARM' },
-        { char: '📦', val: 7, weight: 5, name: 'SCATTER' },
-        { char: '🅰️', val: 6, weight: 10, name: 'A' },
-        { char: '🇰', val: 5, weight: 12, name: 'K' },
-        { char: '🇶', val: 4, weight: 15, name: 'Q' },
-        { char: '🇯', val: 3, weight: 18, name: 'J' },
-        { char: '🔟', val: 2, weight: 20, name: '10' }
-    ];
-
-    const SCATTER_SYMBOL = '📦';
-
-    // ====================== PAYLINES (10 Linien) ======================
-    const PAYLINES = [
-        [1, 1, 1, 1, 1],  // Mitte
-        [0, 0, 0, 0, 0],  // Oben
-        [2, 2, 2, 2, 2],  // Unten
-        [0, 1, 2, 1, 0],  // V-Form
-        [2, 1, 0, 1, 2],  // ^-Form
-        [0, 0, 1, 2, 2],  // Diagonal 1
-        [2, 2, 1, 0, 0],  // Diagonal 2
-        [1, 0, 1, 2, 1],  // Zickzack 1
-        [1, 2, 1, 0, 1],  // Zickzack 2
-        [0, 1, 0, 1, 0]   // Welle
-    ];
-
-    // ====================== MULTIPLIKATOREN ======================
-    const MULTIPLIERS = {
-        '🤖': [0, 10, 100, 1000, 5000],
-        '👮‍♂️': [0, 5, 40, 400, 2000],
-        '🦾': [0, 5, 30, 100, 750],
-        '📦': [0, 2, 20, 200, 2000],
-        '🅰️': [0, 0, 5, 40, 150],
-        '🇰': [0, 0, 5, 40, 150],
-        '🇶': [0, 0, 5, 25, 100],
-        '🇯': [0, 0, 5, 25, 100],
-        '🔟': [0, 0, 5, 25, 100]
-    };
-
-    // ====================== INITIALISIERUNG ======================
-    function init() {
-        setupReels();
-        updateUI();
-        checkWalletConnection();
-        logStatus('Bereit zum Spielen');
-    }
-
-    // ====================== WALLET FUNKTIONEN ======================
-    async function checkWalletConnection() {
-        if (window.solana && window.solana.isPhantom) {
-            if (window.solana.isConnected) {
-                try {
-                    const resp = await window.solana.connect();
-                    await onWalletConnected(resp.publicKey.toString());
-                } catch (err) {
-                    logStatus('Wallet-Verbindung fehlgeschlagen');
-                }
-            }
-        }
-    }
-
-    async function connectWallet() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const resp = await window.solana.connect();
-                await onWalletConnected(resp.publicKey.toString());
-                tg?.HapticFeedback?.notificationOccurred('success');
-            } catch (err) {
-                logStatus('Verbindung abgebrochen');
-                tg?.HapticFeedback?.notificationOccurred('error');
-            }
-        } else {
-            alert('⚠️ Phantom Wallet wird benötigt!\n\nInstalliere Phantom:\nhttps://phantom.app\n\nOder verwende MetaMask mit Solana Snap.');
-        }
-    }
-
-    async function onWalletConnected(publicKey) {
-        gameState.publicKey = publicKey;
-        gameState.isConnected = true;
-        
-        // UI Update
-        document.getElementById('connect-btn').innerHTML = '✅ Verbunden';
-        document.getElementById('connect-btn').classList.add('connected');
-        document.getElementById('wallet-address').innerHTML = 
-            `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
-        
-        // Balance abrufen
-        await fetchDACBalance();
-        
-        // Initial Balance setzen (Demo: 1000 DAC)
-        gameState.inGameBalance = 1000;
-        updateUI();
-        
-        logStatus('Wallet verbunden!');
-    }
-
-    async function fetchDACBalance() {
-        if (!gameState.publicKey) return;
-        
-        try {
-            const connection = new solanaWeb3.Connection(
-                CONFIG.USE_DEVNET ? CONFIG.DEVNET_RPC_URL : CONFIG.RPC_URL
-            );
-            
-            const publicKeyObj = new solanaWeb3.PublicKey(gameState.publicKey);
-            const mintPublicKey = new solanaWeb3.PublicKey(CONFIG.DAC_MINT);
-            
-            const tokenAccounts = await connection.getTokenAccountsByOwner(
-                publicKeyObj,
-                { mint: mintPublicKey },
-                'confirmed'
-            );
-            
-            if (tokenAccounts.value.length > 0) {
-                const tokenAmount = tokenAccounts.value[0].account.data.parsed.info.tokenAmount;
-                gameState.walletBalance = tokenAmount.uiAmount || 0;
-                
-                // In-Game Balance basierend auf Wallet-Balance (Demo-Modus)
-                if (gameState.inGameBalance === 0) {
-                    gameState.inGameBalance = Math.floor(gameState.walletBalance * 100);
-                }
-            } else {
-                gameState.walletBalance = 0;
-                // Demo-Balance für Testing
-                gameState.inGameBalance = 1000;
-            }
-            
-            updateUI();
-        } catch (error) {
-            console.error('Balance-Fehler:', error);
-            // Fallback auf Demo-Balance
-            gameState.inGameBalance = 1000;
-            updateUI();
-        }
-    }
-
-    // ====================== SLOT LOGIK ======================
-    function setupReels() {
-        for (let i = 0; i < CONFIG.REEL_COUNT; i++) {
-            const strip = document.querySelector(`#reel-${i} .symbol-strip
+<script src="js/web3-config.js"></script>
+<script src="js/wallet-manager.js"></script>
+<script src="js/game-engine.js"></script>
+</body>
+</html>
